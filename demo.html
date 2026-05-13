@@ -1232,37 +1232,69 @@ body {
 
 <script>
 /* ==========================================================================
-   DEMO MODE SHIM
+   DEMO MODE SHIM — defensive build
    --------------------------------------------------------------------------
-   This is the layout/UX testing build. It intercepts every fetch('/api/*')
-   call and returns synthetic responses so the form can be walked end-to-end
-   on a static host (GitHub Pages, Netlify Drop, even file://) without any
-   backend.
+   Intercepts every fetch('/api/*') call and returns synthetic responses so
+   the form can be walked end-to-end without a backend.
 
-   Differences from the production build:
-   - OTP send/verify auto-succeed; the verification code field accepts ANY
-     4-digit number (or you can leave it as 7861 — both work).
-   - LOVs are loaded from lovs.json sitting next to this file.
-   - File upload returns a fake file_id; the file isn't actually stored.
-   - OCR extraction returns hardcoded sample data so the review banner
-     surfaces and you can confirm fields.
-   - Submit returns a fake ref number; nothing persists.
+   This build is defensive: it catches every error, makes UAE-mobile
+   validation accept anything, overrides crypto.randomUUID for older
+   browsers, and shows a debug panel at the bottom of the page so any
+   issue is visible on a phone without opening dev tools.
 
-   Once you're happy with the layout on mobile, this exact same HTML
-   (sans this shim) is what runs against the real backend.
+   To bypass OTP entirely, tap "Skip OTP (demo)" on Page 1.
    ========================================================================== */
 const DEMO_MODE = true;
-const _origFetch = window.fetch;
+
+/* Older mobile Safari (pre iOS 15.4) lacks crypto.randomUUID. Polyfill it. */
+if (!window.crypto) window.crypto = {};
+if (typeof crypto.randomUUID !== 'function') {
+  crypto.randomUUID = function() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+      const r = (Math.random() * 16) | 0, v = c === 'x' ? r : (r & 0x3) | 0x8;
+      return v.toString(16);
+    });
+  };
+}
+if (typeof crypto.getRandomValues !== 'function') {
+  crypto.getRandomValues = function(arr) {
+    for (let i = 0; i < arr.length; i++) arr[i] = (Math.random() * 256) | 0;
+    return arr;
+  };
+}
+
+/* Debug panel — visible on the page itself so phone testers can see errors
+   without opening dev tools. Toggle via the "🐞" button bottom-right. */
+window.addEventListener('error', e => _demoLog('ERROR: ' + (e.message || e.error)));
+window.addEventListener('unhandledrejection', e => _demoLog('PROMISE: ' + (e.reason && e.reason.message || e.reason)));
+
+const _demoLogs = [];
+function _demoLog(msg) {
+  const t = new Date().toLocaleTimeString();
+  _demoLogs.push(`[${t}] ${msg}`);
+  if (_demoLogs.length > 50) _demoLogs.shift();
+  const panel = document.getElementById('demoLogPanel');
+  if (panel) panel.textContent = _demoLogs.join('\n');
+}
+
+/* Patch fetch */
+const _origFetch = window.fetch.bind(window);
 window.fetch = async function(url, opts) {
   if (typeof url === 'string' && url.startsWith('/api/')) {
-    return demoFetch(url, opts);
+    try {
+      return await demoFetch(url, opts);
+    } catch (e) {
+      _demoLog('SHIM ERROR ' + url + ': ' + e.message);
+      return jsonResp({ detail: 'Demo shim failed: ' + e.message }, 500);
+    }
   }
   return _origFetch(url, opts);
 };
 
 async function demoFetch(url, opts) {
   const body = opts && opts.body ? safeParse(opts.body) : null;
-  await new Promise(r => setTimeout(r, 80));   // simulate small network delay
+  _demoLog(url + (body && body.code_sms ? ` (code=${body.code_sms})` : ''));
+  await new Promise(r => setTimeout(r, 50));   // tiny delay
 
   if (url === '/api/config')
     return jsonResp({ extraction_configured: true, email_configured: false,
@@ -1270,45 +1302,48 @@ async function demoFetch(url, opts) {
                        otp_length: 4, otp_expiry_minutes: 3 });
 
   if (url === '/api/lovs') {
-    // Fetch the bundled LOVs file from the same directory.
     try {
       const r = await _origFetch('lovs.json', { cache: 'no-store' });
+      if (!r.ok) throw new Error('lovs.json returned ' + r.status);
       const j = await r.json();
       return jsonResp(j);
     } catch (e) {
-      console.error('[DEMO] could not load lovs.json:', e);
-      return jsonResp({}, 500);
+      _demoLog('lovs.json fetch failed: ' + e.message + '. Using minimal fallback.');
+      // Minimal fallback so dropdowns aren't completely empty
+      return jsonResp(_FALLBACK_LOVS);
     }
   }
 
   if (url === '/api/session/start') return jsonResp({ ok: true });
   if (url === '/api/session/page')  return jsonResp({ ok: true });
   if (url === '/api/session/reset') return jsonResp({ session_id: _demoUuid() });
+  if (url === '/api/draft-save')    return jsonResp({ saved: true, saved_at: new Date().toISOString() });
+  if (url === '/api/draft-load')    return jsonResp({ state: 'no_draft' });
 
-  if (url === '/api/draft-save') return jsonResp({ saved: true, saved_at: new Date().toISOString() });
-  if (url === '/api/draft-load') return jsonResp({ state: 'no_draft' });
-
-  if (url === '/api/otp/send') return jsonResp({ success: true, message: 'Verification code sent to your mobile.' });
+  if (url === '/api/otp/send')
+    return jsonResp({ success: true, message: 'Verification code sent (DEMO — any 4 digits work).' });
 
   if (url === '/api/otp/verify') {
-    // Accept any 4-digit code in demo
     const code = (body && body.code_sms || '').trim();
     if (!code || code.length !== 4) {
-      return jsonResp({ detail: 'Please enter the 4-digit code.' }, 400);
+      return jsonResp({ detail: 'Please enter any 4-digit code.' }, 400);
     }
-    return jsonResp({ success: true, ref_number: 'KYB-DEMO-' + Date.now().toString().slice(-6), session_id: body.session_id });
+    return jsonResp({
+      success: true,
+      ref_number: 'KYB-DEMO-' + Date.now().toString().slice(-6),
+      session_id: (body && body.session_id) || _demoUuid(),
+    });
   }
 
   if (url === '/api/upload') {
     return jsonResp({
       file_id: 'demo-' + Math.random().toString(36).slice(2,10),
-      doc_id: Math.floor(Math.random() * 9999),
+      doc_id:  Math.floor(Math.random() * 9999),
     });
   }
 
   if (url === '/api/extract' || url === '/api/llm-extract') {
-    // Return plausible-looking sample extraction so the review banner shows up.
-    const docType = body && (body.doc_type || body.docType) || 'unknown';
+    const docType = (body && (body.doc_type || body.docType)) || 'unknown';
     return jsonResp(_demoExtractionFor(docType));
   }
 
@@ -1318,7 +1353,7 @@ async function demoFetch(url, opts) {
     return jsonResp({ ref: 'KYB-DEMO-' + Date.now().toString().slice(-6), success: true });
   }
 
-  console.warn('[DEMO] unhandled API call:', url);
+  _demoLog('UNHANDLED: ' + url);
   return jsonResp({ detail: 'Not implemented in demo' }, 404);
 }
 
@@ -1331,9 +1366,66 @@ function safeParse(s) {
   try { return JSON.parse(s); } catch (_) { return null; }
 }
 function _demoUuid() {
-  return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
-    (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c/4).toString(16));
+  if (crypto.randomUUID) return crypto.randomUUID();
+  return 'demo-' + Math.random().toString(36).slice(2);
 }
+
+/* Minimal LOV fallback if lovs.json fails to load (e.g. hosted on
+   file:// where CORS blocks the fetch). Dropdowns won't be complete
+   but the form won't be completely empty. */
+const _FALLBACK_LOVS = {
+  gender:     { options: [{code:'male',label:'Male'},{code:'female',label:'Female'}], multi: false },
+  salutation: { options: [{code:'mr',label:'Mr.'},{code:'ms',label:'Ms.'},{code:'mrs',label:'Mrs.'}], multi: false },
+  marital_status: { options: [{code:'single',label:'Single'},{code:'married',label:'Married'}], multi: false },
+  preferred_language: { options: [{code:'english',label:'English'},{code:'arabic',label:'Arabic'}], multi: false },
+  id_type: { options: [{code:'emirates_id',label:'Emirates ID'},{code:'passport',label:'Passport'}], multi: false },
+  emirate: { options: [
+    {code:'dubai',label:'Dubai'},{code:'abu_dhabi',label:'Abu Dhabi'},
+    {code:'sharjah',label:'Sharjah'},{code:'ajman',label:'Ajman'},
+    {code:'umm_al_quwain',label:'Umm Al Quwain'},{code:'rak',label:'Ras Al Khaimah'},
+    {code:'fujairah',label:'Fujairah'},
+  ], multi: false },
+  country: { options: [
+    {code:'AE',label:'United Arab Emirates'},{code:'IN',label:'India'},
+    {code:'PK',label:'Pakistan'},{code:'GB',label:'United Kingdom'},
+    {code:'US',label:'United States'},{code:'EG',label:'Egypt'},
+    {code:'JO',label:'Jordan'},{code:'LB',label:'Lebanon'},
+    {code:'SA',label:'Saudi Arabia'},{code:'PH',label:'Philippines'},
+  ], multi: false },
+  currency: { options: [{code:'AED',label:'AED'},{code:'USD',label:'USD'},{code:'EUR',label:'EUR'}], multi: false },
+  address_type_retail:    { options: [{code:'residential',label:'Residential'},{code:'work',label:'Work'}], multi: false },
+  address_type_corporate: { options: [{code:'office',label:'Office'},{code:'warehouse',label:'Warehouse'}], multi: false },
+  residence_type:  { options: [{code:'owned',label:'Owned'},{code:'rented',label:'Rented'}], multi: false },
+  occupation:      { options: [{code:'business_owner',label:'Business Owner'},{code:'salaried',label:'Salaried'},{code:'self_employed',label:'Self-employed'}], multi: false },
+  activity_status: { options: [{code:'self_employed',label:'Self-employed'},{code:'employed',label:'Employed'}], multi: false },
+  economic_sector: { options: [
+    {code:'trading',label:'Trading'},{code:'services',label:'Services'},
+    {code:'manufacturing',label:'Manufacturing'},{code:'construction',label:'Construction'},
+  ], multi: false },
+  source_of_income: { options: [{code:'business',label:'Business income'},{code:'salary',label:'Salary'},{code:'investments',label:'Investments'}], multi: true },
+  source_of_wealth: { options: [{code:'business_profits',label:'Business profits'},{code:'savings',label:'Savings'},{code:'inheritance',label:'Inheritance'}], multi: true },
+  source_of_funds:  { options: [{code:'business_revenue',label:'Business revenue'},{code:'capital',label:'Capital contribution'}], multi: true },
+  purpose_of_account: { options: [{code:'operations',label:'Business operations'},{code:'payroll',label:'Payroll'}], multi: true },
+  estimated_monthly_turnover: { options: [
+    {code:'lt_50k',label:'Less than 50,000'},{code:'50k_250k',label:'50,000 – 250,000'},
+    {code:'250k_1m',label:'250,000 – 1,000,000'},{code:'gt_1m',label:'More than 1,000,000'},
+  ], multi: false },
+  annual_expected_turnover: { options: [
+    {code:'lt_500k',label:'Less than 500,000'},{code:'500k_5m',label:'500,000 – 5,000,000'},
+    {code:'gt_5m',label:'More than 5,000,000'},
+  ], multi: false },
+  number_of_employees: { options: [{code:'0',label:'0'},{code:'1_10',label:'1–10'},{code:'11_50',label:'11–50'},{code:'gt_50',label:'More than 50'}], multi: false },
+  is_pep: { options: [{code:'no',label:'No'},{code:'yes',label:'Yes'}], multi: false },
+  issuing_authority: { options: [{code:'ded_dubai',label:'DED Dubai'},{code:'adcc',label:'Abu Dhabi'},{code:'sez',label:'Free Zone'}], multi: false },
+  legal_type: { options: [
+    {code:'sole_proprietorship',label:'Sole Proprietorship'},
+    {code:'llc',label:'Limited Liability Company (LLC)'},
+    {code:'fze',label:'Free Zone Establishment (FZE)'},
+    {code:'opc',label:'One Person Company (OPC)'},
+    {code:'other',label:'Other'},
+  ], multi: false },
+};
+
 function _demoExtractionFor(docType) {
   switch (docType) {
     case 'tradeLicense':
@@ -1360,9 +1452,7 @@ function _demoExtractionFor(docType) {
         passportIssuanceDate: '2020-01-01', passportExpiryDate: '2030-01-01',
       }};
     case 'vatCertificate':
-      return { extraction_id: 'demo-vat', success: true, fields: {
-        vatTrn: '100123456789012',
-      }};
+      return { extraction_id: 'demo-vat', success: true, fields: { vatTrn: '100123456789012' }};
     case 'tenancyContract':
       return { extraction_id: 'demo-tc', success: true, fields: {
         buildingName: 'Demo Tower', street: 'Sheikh Zayed Road',
@@ -1373,6 +1463,61 @@ function _demoExtractionFor(docType) {
       return { extraction_id: 'demo-x', success: true, fields: {} };
   }
 }
+
+/* Show a small debug panel at the bottom of the screen (collapsed by default).
+   Tap "🐞" to expand. Logs every API call and any error. */
+window.addEventListener('DOMContentLoaded', () => {
+  const btn = document.createElement('button');
+  btn.textContent = '🐞';
+  btn.style.cssText = 'position:fixed;bottom:12px;right:12px;width:44px;height:44px;border-radius:50%;border:0;background:#2d3748;color:#fff;font-size:20px;z-index:1000;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.2)';
+  const panel = document.createElement('pre');
+  panel.id = 'demoLogPanel';
+  panel.style.cssText = 'display:none;position:fixed;bottom:64px;right:12px;left:12px;max-height:40vh;background:rgba(26,32,44,0.95);color:#a0e060;padding:12px;border-radius:8px;font-size:10px;line-height:1.4;overflow:auto;z-index:1000;margin:0;white-space:pre-wrap;word-wrap:break-word';
+  btn.onclick = () => { panel.style.display = panel.style.display === 'none' ? 'block' : 'none'; };
+  document.body.appendChild(panel);
+  document.body.appendChild(btn);
+  _demoLog('Demo started. Tap 🐞 to see API call log.');
+});
+
+/* After bootstrap runs, override the UAE-mobile validator so any 9+ digit
+   input is accepted. The real validator rejects e.g. Indian numbers,
+   which is unhelpful for demo testing. We delay this until the original
+   function exists. */
+window.addEventListener('load', () => {
+  if (typeof isValidUaeMobile === 'function') {
+    window.isValidUaeMobile = function(m) {
+      const digits = (m || '').replace(/\D/g, '');
+      return digits.length >= 5;     // accept anything that looks numeric
+    };
+    _demoLog('Mobile validator relaxed for demo.');
+  }
+  if (typeof fullMobileForWire === 'function') {
+    const orig = window.fullMobileForWire;
+    window.fullMobileForWire = function(m) {
+      const out = orig(m);
+      if (out) return out;
+      // Original returned empty (invalid UAE shape). Fall back to a
+      // digits-only version so demo isn't blocked.
+      const digits = (m || '').replace(/\D/g, '');
+      return digits ? '+971-' + digits : '';
+    };
+    _demoLog('Mobile wire formatter relaxed for demo.');
+  }
+});
+
+/* Bypass OTP entirely: skip directly to Page 2. Called from a button on
+   Page 1. Useful when OTP itself has a bug we don't want to debug to
+   test the rest of the flow. */
+function demoSkipOtp() {
+  S._otpSent = true;
+  S._otpVerified = true;
+  S._refNumber = 'KYB-DEMO-SKIP';
+  _demoLog('OTP skipped via demo button.');
+  curPage = 2;
+  if (curPage > maxReachedPage) maxReachedPage = curPage;
+  render();
+}
+
 /* ==================== END DEMO MODE SHIM ==================== */
 
 
@@ -3092,6 +3237,9 @@ function otpBlock() {
     ${S._otpSending ? 'Sending…' : 'Send verification code'}
   </button>
   <div id="otpSendHint" class="hint" style="margin-top:8px;color:#7a7a7a;font-size:13px;${canSend ? 'display:none' : ''}">Fill in all the fields above first.</div>
+  <div style="margin-top:18px;padding-top:14px;border-top:1px dashed #ddd">
+    <button type="button" onclick="demoSkipOtp()" style="background:none;border:0;color:#666;font-size:12px;text-decoration:underline;cursor:pointer;padding:0">⤳ Demo: skip OTP and go to next page</button>
+  </div>
 </div>`;
   }
 
