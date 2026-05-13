@@ -1,0 +1,1118 @@
+{
+  "gender": {
+    "options": [
+      {
+        "code": "male",
+        "label": "Male"
+      },
+      {
+        "code": "female",
+        "label": "Female"
+      }
+    ],
+    "multi": false
+  },
+  "salutation": {
+    "options": [
+      {
+        "code": "mr",
+        "label": "Mr."
+      },
+      {
+        "code": "mrs",
+        "label": "Mrs."
+      },
+      {
+        "code": "ms",
+        "label": "Ms."
+      },
+      {
+        "code": "dr",
+        "label": "Dr."
+      }
+    ],
+    "multi": false
+  },
+  "marital_status": {
+    "options": [
+      {
+        "code": "single",
+        "label": "Single"
+      },
+      {
+        "code": "married",
+        "label": "Married"
+      },
+      {
+        "code": "divorced",
+        "label": "Divorced"
+      },
+      {
+        "code": "widowed",
+        "label": "Widowed"
+      }
+    ],
+    "multi": false
+  },
+  "preferred_language": {
+    "options": [
+      {
+        "code": "english",
+        "label": "English"
+      },
+      {
+        "code": "arabic",
+        "label": "Arabic"
+      }
+    ],
+    "multi": false
+  },
+  "id_type": {
+    "options": [
+      {
+        "code": "emirates_id",
+        "label": "Emirates ID"
+      },
+      {
+        "code": "passport",
+        "label": "Passport"
+      }
+    ],
+    "multi": false
+  },
+  "emirate": {
+    "options": [
+      {
+        "code": "abu_dhabi",
+        "label": "Abu Dhabi"
+      },
+      {
+        "code": "dubai",
+        "label": "Dubai"
+      },
+      {
+        "code": "sharjah",
+        "label": "Sharjah"
+      },
+      {
+        "code": "ajman",
+        "label": "Ajman"
+      },
+      {
+        "code": "uaq",
+        "label": "Umm Al Quwain"
+      },
+      {
+        "code": "rak",
+        "label": "Ras Al Khaimah"
+      },
+      {
+        "code": "fujairah",
+        "label": "Fujairah"
+      }
+    ],
+    "multi": false
+  },
+  "country": {
+    "options": [
+      {
+        "code": "AE",
+        "label": "United Arab Emirates"
+      },
+      {
+        "code": "IN",
+        "label": "India"
+      },
+      {
+        "code": "PK",
+        "label": "Pakistan"
+      },
+      {
+        "code": "EG",
+        "label": "Egypt"
+      },
+      {
+        "code": "GB",
+        "label": "United Kingdom"
+      },
+      {
+        "code": "PH",
+        "label": "Philippines"
+      },
+      {
+        "code": "BD",
+        "label": "Bangladesh"
+      },
+      {
+        "code": "JO",
+        "label": "Jordan"
+      },
+      {
+        "code": "LB",
+        "label": "Lebanon"
+      },
+      {
+        "code": "SY",
+        "label": "Syria"
+      },
+      {
+        "code": "IR",
+        "label": "Iran"
+      },
+      {
+        "code": "IQ",
+        "label": "Iraq"
+      },
+      {
+        "code": "SA",
+        "label": "Saudi Arabia"
+      },
+      {
+        "code": "KW",
+        "label": "Kuwait"
+      },
+      {
+        "code": "OM",
+        "label": "Oman"
+      },
+      {
+        "code": "QA",
+        "label": "Qatar"
+      },
+      {
+        "code": "BH",
+        "label": "Bahrain"
+      },
+      {
+        "code": "YE",
+        "label": "Yemen"
+      },
+      {
+        "code": "US",
+        "label": "United States"
+      },
+      {
+        "code": "CA",
+        "label": "Canada"
+      },
+      {
+        "code": "AU",
+        "label": "Australia"
+      },
+      {
+        "code": "AF",
+        "label": "Afghanistan"
+      },
+      {
+        "code": "AL",
+        "label": "Albania"
+      },
+      {
+        "code": "DZ",
+        "label": "Algeria"
+      },
+      {
+        "code": "AR",
+        "label": "Argentina"
+      },
+      {
+        "code": "AM",
+        "label": "Armenia"
+      },
+      {
+        "code": "AT",
+        "label": "Austria"
+      },
+      {
+        "code": "AZ",
+        "label": "Azerbaijan"
+      },
+      {
+        "code": "BE",
+        "label": "Belgium"
+      },
+      {
+        "code": "BR",
+        "label": "Brazil"
+      },
+      {
+        "code": "BG",
+        "label": "Bulgaria"
+      },
+      {
+        "code": "KH",
+        "label": "Cambodia"
+      },
+      {
+        "code": "CN",
+        "label": "China"
+      },
+      {
+        "code": "CO",
+        "label": "Colombia"
+      },
+      {
+        "code": "HR",
+        "label": "Croatia"
+      },
+      {
+        "code": "CY",
+        "label": "Cyprus"
+      },
+      {
+        "code": "CZ",
+        "label": "Czech Republic"
+      },
+      {
+        "code": "DK",
+        "label": "Denmark"
+      },
+      {
+        "code": "ET",
+        "label": "Ethiopia"
+      },
+      {
+        "code": "FI",
+        "label": "Finland"
+      },
+      {
+        "code": "FR",
+        "label": "France"
+      },
+      {
+        "code": "GE",
+        "label": "Georgia"
+      },
+      {
+        "code": "DE",
+        "label": "Germany"
+      },
+      {
+        "code": "GH",
+        "label": "Ghana"
+      },
+      {
+        "code": "GR",
+        "label": "Greece"
+      },
+      {
+        "code": "HK",
+        "label": "Hong Kong"
+      },
+      {
+        "code": "HU",
+        "label": "Hungary"
+      },
+      {
+        "code": "ID",
+        "label": "Indonesia"
+      },
+      {
+        "code": "IE",
+        "label": "Ireland"
+      },
+      {
+        "code": "IL",
+        "label": "Israel"
+      },
+      {
+        "code": "IT",
+        "label": "Italy"
+      },
+      {
+        "code": "JP",
+        "label": "Japan"
+      },
+      {
+        "code": "KZ",
+        "label": "Kazakhstan"
+      },
+      {
+        "code": "KE",
+        "label": "Kenya"
+      },
+      {
+        "code": "KR",
+        "label": "Korea, South"
+      },
+      {
+        "code": "LY",
+        "label": "Libya"
+      },
+      {
+        "code": "MY",
+        "label": "Malaysia"
+      },
+      {
+        "code": "MV",
+        "label": "Maldives"
+      },
+      {
+        "code": "MT",
+        "label": "Malta"
+      },
+      {
+        "code": "MU",
+        "label": "Mauritius"
+      },
+      {
+        "code": "MX",
+        "label": "Mexico"
+      },
+      {
+        "code": "MA",
+        "label": "Morocco"
+      },
+      {
+        "code": "NP",
+        "label": "Nepal"
+      },
+      {
+        "code": "NL",
+        "label": "Netherlands"
+      },
+      {
+        "code": "NZ",
+        "label": "New Zealand"
+      },
+      {
+        "code": "NG",
+        "label": "Nigeria"
+      },
+      {
+        "code": "NO",
+        "label": "Norway"
+      },
+      {
+        "code": "PS",
+        "label": "Palestine"
+      },
+      {
+        "code": "PL",
+        "label": "Poland"
+      },
+      {
+        "code": "PT",
+        "label": "Portugal"
+      },
+      {
+        "code": "RO",
+        "label": "Romania"
+      },
+      {
+        "code": "RU",
+        "label": "Russia"
+      },
+      {
+        "code": "SN",
+        "label": "Senegal"
+      },
+      {
+        "code": "RS",
+        "label": "Serbia"
+      },
+      {
+        "code": "SG",
+        "label": "Singapore"
+      },
+      {
+        "code": "SK",
+        "label": "Slovakia"
+      },
+      {
+        "code": "ZA",
+        "label": "South Africa"
+      },
+      {
+        "code": "ES",
+        "label": "Spain"
+      },
+      {
+        "code": "LK",
+        "label": "Sri Lanka"
+      },
+      {
+        "code": "SD",
+        "label": "Sudan"
+      },
+      {
+        "code": "SE",
+        "label": "Sweden"
+      },
+      {
+        "code": "CH",
+        "label": "Switzerland"
+      },
+      {
+        "code": "TW",
+        "label": "Taiwan"
+      },
+      {
+        "code": "TJ",
+        "label": "Tajikistan"
+      },
+      {
+        "code": "TZ",
+        "label": "Tanzania"
+      },
+      {
+        "code": "TH",
+        "label": "Thailand"
+      },
+      {
+        "code": "TN",
+        "label": "Tunisia"
+      },
+      {
+        "code": "TR",
+        "label": "Turkey"
+      },
+      {
+        "code": "TM",
+        "label": "Turkmenistan"
+      },
+      {
+        "code": "UG",
+        "label": "Uganda"
+      },
+      {
+        "code": "UA",
+        "label": "Ukraine"
+      },
+      {
+        "code": "UZ",
+        "label": "Uzbekistan"
+      },
+      {
+        "code": "VN",
+        "label": "Vietnam"
+      },
+      {
+        "code": "ZM",
+        "label": "Zambia"
+      },
+      {
+        "code": "ZW",
+        "label": "Zimbabwe"
+      },
+      {
+        "code": "OTHER",
+        "label": "Other (please specify with ops)"
+      }
+    ],
+    "multi": false
+  },
+  "currency": {
+    "options": [
+      {
+        "code": "AED",
+        "label": "AED — UAE Dirham"
+      },
+      {
+        "code": "USD",
+        "label": "USD — US Dollar"
+      },
+      {
+        "code": "EUR",
+        "label": "EUR — Euro"
+      },
+      {
+        "code": "GBP",
+        "label": "GBP — British Pound"
+      },
+      {
+        "code": "SAR",
+        "label": "SAR — Saudi Riyal"
+      },
+      {
+        "code": "INR",
+        "label": "INR — Indian Rupee"
+      },
+      {
+        "code": "PKR",
+        "label": "PKR — Pakistani Rupee"
+      },
+      {
+        "code": "OTHER",
+        "label": "Other"
+      }
+    ],
+    "multi": false
+  },
+  "address_type_retail": {
+    "options": [
+      {
+        "code": "residential",
+        "label": "Residential"
+      },
+      {
+        "code": "mailing",
+        "label": "Mailing"
+      },
+      {
+        "code": "permanent",
+        "label": "Permanent"
+      }
+    ],
+    "multi": false
+  },
+  "address_type_corporate": {
+    "options": [
+      {
+        "code": "business",
+        "label": "Business / Office"
+      },
+      {
+        "code": "registered",
+        "label": "Registered"
+      },
+      {
+        "code": "mailing",
+        "label": "Mailing"
+      }
+    ],
+    "multi": false
+  },
+  "residence_type": {
+    "options": [
+      {
+        "code": "owned",
+        "label": "Owned"
+      },
+      {
+        "code": "rented",
+        "label": "Rented"
+      },
+      {
+        "code": "family_provided",
+        "label": "Provided by family"
+      },
+      {
+        "code": "company_provided",
+        "label": "Provided by employer / company"
+      }
+    ],
+    "multi": false
+  },
+  "occupation": {
+    "options": [
+      {
+        "code": "business_owner",
+        "label": "Business Owner"
+      },
+      {
+        "code": "director",
+        "label": "Director"
+      },
+      {
+        "code": "manager",
+        "label": "Manager"
+      },
+      {
+        "code": "professional",
+        "label": "Professional (Accountant, Lawyer, etc.)"
+      },
+      {
+        "code": "self_employed",
+        "label": "Self-employed"
+      },
+      {
+        "code": "consultant",
+        "label": "Consultant / Freelancer"
+      },
+      {
+        "code": "other",
+        "label": "Other"
+      }
+    ],
+    "multi": false
+  },
+  "activity_status": {
+    "options": [
+      {
+        "code": "self_employed",
+        "label": "Self-employed"
+      },
+      {
+        "code": "private_sector",
+        "label": "Private Sector"
+      },
+      {
+        "code": "government",
+        "label": "Government"
+      },
+      {
+        "code": "free_zone",
+        "label": "Free Zone"
+      },
+      {
+        "code": "other",
+        "label": "Other"
+      }
+    ],
+    "multi": false
+  },
+  "economic_sector": {
+    "options": [
+      {
+        "code": "trading",
+        "label": "Trading"
+      },
+      {
+        "code": "services",
+        "label": "Services"
+      },
+      {
+        "code": "manufacturing",
+        "label": "Manufacturing"
+      },
+      {
+        "code": "construction",
+        "label": "Construction"
+      },
+      {
+        "code": "real_estate",
+        "label": "Real Estate"
+      },
+      {
+        "code": "hospitality",
+        "label": "Hospitality / Food & Beverage"
+      },
+      {
+        "code": "healthcare",
+        "label": "Healthcare"
+      },
+      {
+        "code": "education",
+        "label": "Education"
+      },
+      {
+        "code": "technology",
+        "label": "Technology / IT"
+      },
+      {
+        "code": "transport_logistics",
+        "label": "Transport & Logistics"
+      },
+      {
+        "code": "professional_svcs",
+        "label": "Professional Services (Legal, Accounting, Consulting)"
+      },
+      {
+        "code": "retail",
+        "label": "Retail"
+      },
+      {
+        "code": "media_advertising",
+        "label": "Media / Advertising"
+      },
+      {
+        "code": "other",
+        "label": "Other"
+      }
+    ],
+    "multi": false
+  },
+  "source_of_income": {
+    "options": [
+      {
+        "code": "business_income",
+        "label": "Business income"
+      },
+      {
+        "code": "salary",
+        "label": "Salary"
+      },
+      {
+        "code": "investments",
+        "label": "Investments / Dividends"
+      },
+      {
+        "code": "rental_income",
+        "label": "Rental income"
+      },
+      {
+        "code": "inheritance",
+        "label": "Inheritance"
+      },
+      {
+        "code": "sale_of_property",
+        "label": "Sale of property / assets"
+      },
+      {
+        "code": "pension",
+        "label": "Pension / Retirement"
+      },
+      {
+        "code": "other",
+        "label": "Other"
+      }
+    ],
+    "multi": true
+  },
+  "source_of_wealth": {
+    "options": [
+      {
+        "code": "business_income",
+        "label": "Business income"
+      },
+      {
+        "code": "investment_returns",
+        "label": "Investment returns"
+      },
+      {
+        "code": "salary_savings",
+        "label": "Savings from salary"
+      },
+      {
+        "code": "inheritance",
+        "label": "Inheritance"
+      },
+      {
+        "code": "sale_of_property",
+        "label": "Sale of property / assets"
+      },
+      {
+        "code": "gift",
+        "label": "Gift"
+      },
+      {
+        "code": "other",
+        "label": "Other"
+      }
+    ],
+    "multi": true
+  },
+  "source_of_funds": {
+    "options": [
+      {
+        "code": "business_operations",
+        "label": "Business operations"
+      },
+      {
+        "code": "investments",
+        "label": "Investments / Dividends"
+      },
+      {
+        "code": "capital_contribution",
+        "label": "Capital contribution from shareholders"
+      },
+      {
+        "code": "loan",
+        "label": "Loan / Financing"
+      },
+      {
+        "code": "other",
+        "label": "Other"
+      }
+    ],
+    "multi": true
+  },
+  "purpose_of_account": {
+    "options": [
+      {
+        "code": "business_operations",
+        "label": "Business operations / day-to-day"
+      },
+      {
+        "code": "salary_disbursement",
+        "label": "Salary disbursement"
+      },
+      {
+        "code": "trade_settlement",
+        "label": "Trade settlement"
+      },
+      {
+        "code": "investment",
+        "label": "Investment"
+      },
+      {
+        "code": "loan_servicing",
+        "label": "Loan servicing"
+      },
+      {
+        "code": "other",
+        "label": "Other"
+      }
+    ],
+    "multi": true
+  },
+  "estimated_monthly_turnover": {
+    "options": [
+      {
+        "code": "below_50k",
+        "label": "Below AED 50,000"
+      },
+      {
+        "code": "50k_to_200k",
+        "label": "AED 50,000 — 200,000"
+      },
+      {
+        "code": "200k_to_500k",
+        "label": "AED 200,000 — 500,000"
+      },
+      {
+        "code": "500k_to_1m",
+        "label": "AED 500,000 — 1,000,000"
+      },
+      {
+        "code": "above_1m",
+        "label": "Above AED 1,000,000"
+      }
+    ],
+    "multi": false
+  },
+  "annual_expected_turnover": {
+    "options": [
+      {
+        "code": "below_600k",
+        "label": "Below AED 600,000"
+      },
+      {
+        "code": "600k_to_2_4m",
+        "label": "AED 600,000 — 2.4M"
+      },
+      {
+        "code": "2_4m_to_6m",
+        "label": "AED 2.4M — 6M"
+      },
+      {
+        "code": "6m_to_12m",
+        "label": "AED 6M — 12M"
+      },
+      {
+        "code": "above_12m",
+        "label": "Above AED 12M"
+      }
+    ],
+    "multi": false
+  },
+  "number_of_employees": {
+    "options": [
+      {
+        "code": "0",
+        "label": "None — no employees yet"
+      },
+      {
+        "code": "1_to_10",
+        "label": "1 — 10"
+      },
+      {
+        "code": "11_to_50",
+        "label": "11 — 50"
+      },
+      {
+        "code": "51_to_200",
+        "label": "51 — 200"
+      },
+      {
+        "code": "200_plus",
+        "label": "More than 200"
+      }
+    ],
+    "multi": false
+  },
+  "is_pep": {
+    "options": [
+      {
+        "code": "no",
+        "label": "No"
+      },
+      {
+        "code": "yes_self",
+        "label": "Yes — I am a PEP"
+      },
+      {
+        "code": "yes_family",
+        "label": "Yes — a close family member is a PEP"
+      },
+      {
+        "code": "yes_close_associate",
+        "label": "Yes — a close business associate is a PEP"
+      }
+    ],
+    "multi": false
+  },
+  "issuing_authority": {
+    "options": [
+      {
+        "code": "ded_abu_dhabi",
+        "label": "DED Abu Dhabi (Department of Economic Development)"
+      },
+      {
+        "code": "ded_dubai",
+        "label": "DED Dubai"
+      },
+      {
+        "code": "ded_sharjah",
+        "label": "DED Sharjah"
+      },
+      {
+        "code": "ded_ajman",
+        "label": "DED Ajman"
+      },
+      {
+        "code": "ded_uaq",
+        "label": "DED Umm Al Quwain"
+      },
+      {
+        "code": "ded_rak",
+        "label": "DED Ras Al Khaimah"
+      },
+      {
+        "code": "ded_fujairah",
+        "label": "DED Fujairah"
+      },
+      {
+        "code": "dmcc",
+        "label": "DMCC"
+      },
+      {
+        "code": "jafza",
+        "label": "JAFZA"
+      },
+      {
+        "code": "dafza",
+        "label": "DAFZA"
+      },
+      {
+        "code": "difc",
+        "label": "DIFC"
+      },
+      {
+        "code": "adgm",
+        "label": "ADGM"
+      },
+      {
+        "code": "rakez",
+        "label": "RAKEZ"
+      },
+      {
+        "code": "shams",
+        "label": "SHAMS"
+      },
+      {
+        "code": "saif_zone",
+        "label": "Sharjah Airport International Free Zone (SAIF)"
+      },
+      {
+        "code": "hamriyah",
+        "label": "Hamriyah Free Zone"
+      },
+      {
+        "code": "kizad",
+        "label": "KIZAD"
+      },
+      {
+        "code": "fujairah_fz",
+        "label": "Fujairah Free Zone"
+      },
+      {
+        "code": "ajman_fz",
+        "label": "Ajman Free Zone"
+      },
+      {
+        "code": "uaq_fz",
+        "label": "UAQ Free Zone"
+      },
+      {
+        "code": "ifza",
+        "label": "IFZA Dubai"
+      },
+      {
+        "code": "meydan",
+        "label": "Meydan Free Zone"
+      },
+      {
+        "code": "dwc",
+        "label": "Dubai South / DWC"
+      },
+      {
+        "code": "dubai_silicon",
+        "label": "Dubai Silicon Oasis"
+      },
+      {
+        "code": "dubai_internet",
+        "label": "Dubai Internet City"
+      },
+      {
+        "code": "dubai_media",
+        "label": "Dubai Media City"
+      },
+      {
+        "code": "dubai_health",
+        "label": "Dubai Healthcare City"
+      },
+      {
+        "code": "dubai_design",
+        "label": "Dubai Design District"
+      },
+      {
+        "code": "twofour54",
+        "label": "twofour54 Abu Dhabi"
+      },
+      {
+        "code": "masdar",
+        "label": "Masdar City Free Zone"
+      },
+      {
+        "code": "other",
+        "label": "Other"
+      }
+    ],
+    "multi": false
+  },
+  "legal_type": {
+    "options": [
+      {
+        "code": "sole_proprietorship",
+        "label": "Sole Proprietorship / Sole Establishment"
+      },
+      {
+        "code": "opc",
+        "label": "One Person Company (OPC)"
+      },
+      {
+        "code": "llc_single",
+        "label": "LLC — Single Shareholder / Single Member"
+      },
+      {
+        "code": "llc_multi",
+        "label": "LLC — Multi-shareholder"
+      },
+      {
+        "code": "civil_company",
+        "label": "Civil Company"
+      },
+      {
+        "code": "partnership",
+        "label": "Partnership (General / Simple Commandite)"
+      },
+      {
+        "code": "pjsc",
+        "label": "Public Joint Stock Company (PJSC)"
+      },
+      {
+        "code": "private_jsc",
+        "label": "Private Joint Stock Company"
+      },
+      {
+        "code": "fze",
+        "label": "Free Zone Establishment (FZE)"
+      },
+      {
+        "code": "fz_co",
+        "label": "Free Zone Company (FZ-LLC / FZ-Co)"
+      },
+      {
+        "code": "branch",
+        "label": "Branch of a Foreign / Local Company"
+      },
+      {
+        "code": "other",
+        "label": "Other (please specify)"
+      }
+    ],
+    "multi": false
+  }
+}

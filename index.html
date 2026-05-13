@@ -1,0 +1,4599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MFP KYB Portal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<style>
+:root {
+  --gold: #b8944d;
+  --gold-dark: #8a6e3a;
+  --gold-darker: #6d5229;
+  --gold-light: #e8d9b8;
+  --gold-lighter: #f3eadb;
+  --beige: #f7f1e3;
+  --beige-light: #fdfaf2;
+  --white: #ffffff;
+  --ink: #1e1e1e;
+  --ink-light: #3a3a3a;
+  --muted: #7a7a7a;
+  --muted-light: #a8a8a8;
+  --border: #e0d6bf;
+  --border-light: #ede6d4;
+  --cond-border: #d4b66a;
+  --cond-bg: #fef9ed;
+  --error: #c0503a;
+  --error-bg: #fef0ec;
+  --success: #3a8a5c;
+  --success-bg: #edf7f0;
+  --warn-bg: #fef6e0;
+  --warn-border: #e0c060;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+  --radius: 8px;
+  --radius-sm: 6px;
+  --font: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-display: 'DM Serif Display', Georgia, serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font);
+  background: var(--beige-light);
+  color: var(--ink);
+  font-size: 15px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ==================== LAYOUT ==================== */
+.app { display: flex; min-height: 100vh; }
+
+.rail {
+  width: 272px;
+  background: var(--white);
+  border-right: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  z-index: 20;
+}
+
+.rail-brand {
+  padding: 24px 24px 20px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.rail-brand h1 {
+  font-family: var(--font-display);
+  font-size: 22px;
+  color: var(--gold-dark);
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
+.rail-brand .subtitle {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 500;
+}
+
+.rail-nav {
+  list-style: none;
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 0;
+}
+
+.rail-nav li button {
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  padding: 9px 24px;
+  font-size: 13px;
+  font-family: var(--font);
+  color: var(--ink-light);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-left: 3px solid transparent;
+  transition: all 0.15s;
+}
+
+.rail-nav li button:hover { background: var(--beige-light); }
+
+.rail-nav li button.active {
+  background: var(--beige);
+  border-left-color: var(--gold);
+  font-weight: 600;
+  color: var(--gold-darker);
+}
+
+.rail-nav li button .pnum {
+  font-size: 10px;
+  color: var(--muted-light);
+  min-width: 20px;
+  font-weight: 600;
+}
+
+.rail-nav li button.active .pnum { color: var(--gold-dark); }
+
+.rail-nav li button.locked {
+  opacity: 0.4;
+  cursor: not-allowed;
+  color: var(--muted-light);
+}
+
+.rail-nav li button.locked:hover { background: none; }
+
+.rail-nav li button .page-check {
+  margin-left: auto;
+  font-size: 14px;
+  opacity: 0.6;
+}
+
+.rail-footer {
+  padding: 16px 24px;
+  border-top: 1px solid var(--border-light);
+}
+
+.rail-footer button {
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-family: var(--font);
+  background: var(--beige);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  color: var(--ink-light);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  justify-content: center;
+  font-weight: 500;
+}
+
+.rail-footer button:hover { background: var(--gold-lighter); }
+
+/* ---- Mobile rail ---- */
+.mobile-bar {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 56px;
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  z-index: 40;
+  align-items: center;
+  padding: 0 16px;
+  gap: 12px;
+}
+
+.mobile-bar .hamburger {
+  width: 36px; height: 36px;
+  background: none; border: none;
+  font-size: 20px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: var(--radius-sm);
+}
+
+.mobile-bar .hamburger:active { background: var(--beige); }
+
+.mobile-bar .mob-title {
+  font-family: var(--font-display);
+  font-size: 17px;
+  color: var(--gold-dark);
+}
+
+.rail-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.3);
+  z-index: 19;
+}
+
+@media (max-width: 768px) {
+  .mobile-bar { display: flex; }
+  .rail {
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+    box-shadow: var(--shadow-md);
+  }
+  .rail.open { transform: translateX(0); }
+  .rail-overlay.open { display: block; }
+  .main-content { padding-top: 72px; }
+  .app { display: block; }
+}
+
+/* ==================== MAIN CONTENT ==================== */
+.main-content {
+  flex: 1;
+  min-width: 0;
+  padding: 40px 56px 48px;
+  max-width: 820px;
+}
+
+@media (max-width: 768px) {
+  .main-content { padding: 20px; max-width: 100%; }
+}
+
+.page-header {
+  margin-bottom: 28px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.page-header .kicker {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--gold-dark);
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.page-header h1 {
+  font-family: var(--font-display);
+  font-size: 28px;
+  color: var(--ink);
+  font-weight: 400;
+  line-height: 1.3;
+}
+
+.page-header .sub {
+  color: var(--muted);
+  font-size: 14px;
+  margin-top: 8px;
+}
+
+/* ==================== SECTIONS & FIELDS ==================== */
+.section {
+  background: var(--white);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
+  padding: 24px;
+  margin-bottom: 20px;
+  box-shadow: var(--shadow-sm);
+}
+
+.section h2 {
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--gold-dark);
+  margin-bottom: 16px;
+}
+
+.section h3 {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 20px 0 12px;
+  color: var(--ink);
+}
+
+.section .intro {
+  font-size: 13px;
+  color: var(--muted);
+  margin: -8px 0 16px;
+  line-height: 1.5;
+}
+
+.field {
+  margin-bottom: 16px;
+}
+
+.field:last-child { margin-bottom: 0; }
+
+.field label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 5px;
+  color: var(--ink);
+}
+
+.field label .req { color: var(--error); margin-left: 2px; }
+.field label .opt { font-weight: 400; color: var(--muted); font-size: 12px; }
+
+.field input[type="text"],
+.field input[type="email"],
+.field input[type="tel"],
+.field input[type="number"],
+.field input[type="date"],
+.field select,
+.field textarea {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 15px;
+  font-family: var(--font);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--white);
+  color: var(--ink);
+  min-height: 44px;
+  transition: border-color 0.15s;
+}
+
+.field input:focus, .field select:focus, .field textarea:focus {
+  outline: none;
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(184,148,77,0.12);
+}
+
+.field textarea { min-height: 80px; resize: vertical; }
+.field .help { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.field-row-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 600px) {
+  .field-row, .field-row-3 { grid-template-columns: 1fr; }
+}
+
+/* Radio / check groups */
+.radio-group, .check-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.radio-group label, .check-group label {
+  font-weight: 400;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.15s;
+}
+
+.radio-group label:hover, .check-group label:hover {
+  border-color: var(--gold-light);
+  background: var(--beige-light);
+}
+
+.radio-group label.selected, .check-group label.selected {
+  border-color: var(--gold);
+  background: var(--gold-lighter);
+}
+
+.radio-group input, .check-group input { margin-top: 2px; flex-shrink: 0; }
+
+/* Upload box */
+.upload-box {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 28px;
+  text-align: center;
+  background: var(--beige-light);
+  cursor: pointer;
+  transition: all 0.15s;
+  position: relative;
+}
+
+.upload-box:hover {
+  border-color: var(--gold-light);
+  background: var(--gold-lighter);
+}
+
+.upload-box .upload-icon { font-size: 28px; margin-bottom: 8px; }
+.upload-box .upload-label { font-weight: 600; font-size: 14px; }
+.upload-box .upload-hint { font-size: 12px; color: var(--muted); margin-top: 4px; }
+.upload-box input[type="file"] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+/* Upload preview */
+.upload-preview {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: var(--success-bg);
+  border: 1px solid var(--success);
+  border-radius: var(--radius-sm);
+  margin-top: 8px;
+}
+
+.upload-preview img {
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+}
+
+.upload-preview .file-name { font-size: 13px; font-weight: 500; flex: 1; }
+.upload-preview .file-size { font-size: 11px; color: var(--muted); }
+.upload-preview .remove-btn {
+  background: none;
+  border: none;
+  color: var(--error);
+  cursor: pointer;
+  font-size: 18px;
+  padding: 4px;
+}
+
+/* Conditional block */
+.cond-block {
+  border: 1px dashed var(--cond-border);
+  background: var(--cond-bg);
+  border-radius: var(--radius-sm);
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.cond-block.hidden-cond { display: none; }
+
+.cond-tag {
+  display: inline-block;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--gold-dark);
+  background: var(--white);
+  border: 1px solid var(--cond-border);
+  padding: 2px 8px;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+/* Note / warning boxes */
+.note-box {
+  padding: 14px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+
+.note-box.info {
+  background: var(--beige);
+  border-left: 3px solid var(--gold);
+}
+
+.note-box.warn {
+  background: var(--warn-bg);
+  border-left: 3px solid var(--warn-border);
+}
+
+.note-box.error {
+  background: var(--error-bg);
+  border-left: 3px solid var(--error);
+}
+
+.note-box.success {
+  background: var(--success-bg);
+  border-left: 3px solid var(--success);
+}
+
+.note-box strong { color: var(--gold-dark); }
+
+/* OCR badge */
+.ocr-badge {
+  display: inline-block;
+  font-size: 9px;
+  background: var(--gold-light);
+  color: var(--gold-dark);
+  padding: 2px 7px;
+  border-radius: 8px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  vertical-align: middle;
+  margin-left: 6px;
+}
+
+/* OCR shimmer animation */
+.ocr-loading .field input,
+.ocr-loading .field select,
+.ocr-loading .field textarea {
+  background: linear-gradient(90deg, var(--beige-light) 25%, var(--gold-lighter) 50%, var(--beige-light) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  color: transparent;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.extracting-overlay {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: var(--gold-lighter);
+  border: 1px solid var(--gold-light);
+  border-radius: var(--radius-sm);
+  margin-bottom: 16px;
+  font-size: 13px;
+  color: var(--gold-darker);
+  font-weight: 500;
+}
+
+.extracting-overlay .spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--gold-light);
+  border-top-color: var(--gold-dark);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Checklist */
+.doc-checklist { list-style: none; }
+.doc-checklist li {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-light);
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: 14px;
+}
+
+.doc-checklist li:last-child { border-bottom: none; }
+.doc-checklist .ck { color: var(--gold); font-weight: 700; min-width: 18px; font-size: 16px; }
+.doc-checklist .dn { font-weight: 600; }
+.doc-checklist .dm { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+/* Shareholder switcher / signatory switcher */
+.variant-switcher {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 20px;
+  padding: 12px 14px;
+  background: var(--beige);
+  border-radius: var(--radius-sm);
+  align-items: center;
+}
+
+.variant-switcher .vs-label {
+  font-size: 12px;
+  color: var(--muted);
+  margin-right: 6px;
+  font-weight: 500;
+}
+
+.variant-switcher button {
+  padding: 6px 14px;
+  font-size: 12px;
+  font-family: var(--font);
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.15s;
+}
+
+.variant-switcher button:hover { border-color: var(--gold-light); }
+
+.variant-switcher button.active {
+  background: var(--gold);
+  color: var(--white);
+  border-color: var(--gold-dark);
+}
+
+/* Linked card */
+.linked-card {
+  background: var(--beige);
+  border-left: 3px solid var(--gold);
+  padding: 14px 16px;
+  border-radius: var(--radius-sm);
+}
+
+.linked-card .lc-tag {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--gold-dark);
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.linked-card .lc-name { font-weight: 600; font-size: 15px; }
+.linked-card .lc-info { font-size: 13px; color: var(--muted); margin-top: 2px; }
+
+/* Summary rows */
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-light);
+  gap: 16px;
+}
+
+.summary-row:last-child { border-bottom: none; }
+.summary-row .s-label { font-size: 12px; color: var(--muted); flex: 1; }
+.summary-row .s-value { font-size: 14px; flex: 2; word-break: break-word; }
+.summary-row .s-edit {
+  font-size: 12px;
+  color: var(--gold-dark);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+  font-family: var(--font);
+  white-space: nowrap;
+}
+
+/* ==================== NAV BUTTONS ==================== */
+.nav-bar {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 36px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border-light);
+}
+
+.btn {
+  padding: 12px 32px;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: var(--font);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  min-height: 44px;
+  min-width: 120px;
+  transition: all 0.15s;
+  border: none;
+}
+
+.btn-back {
+  background: var(--white);
+  border: 1px solid var(--border);
+  color: var(--ink-light);
+}
+
+.btn-back:hover { background: var(--beige); }
+.btn-back:disabled { opacity: 0.35; cursor: not-allowed; }
+
+.btn-next {
+  background: var(--gold);
+  color: var(--white);
+}
+
+.btn-next:hover { background: var(--gold-dark); }
+
+.btn-submit {
+  background: var(--success);
+  color: var(--white);
+}
+
+.btn-submit:hover { background: #2e7a4e; }
+
+/* ==================== SETTINGS MODAL ==================== */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 100;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-overlay.open { display: flex; }
+
+.modal {
+  background: var(--white);
+  border-radius: var(--radius);
+  padding: 32px;
+  max-width: 480px;
+  width: 90%;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.2);
+}
+
+.modal h2 {
+  font-family: var(--font-display);
+  font-size: 22px;
+  margin-bottom: 8px;
+}
+
+.modal .modal-sub {
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 24px;
+}
+
+.modal .field { margin-bottom: 16px; }
+
+.modal .modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.modal .modal-actions button {
+  padding: 10px 20px;
+  font-size: 14px;
+  font-family: var(--font);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-weight: 600;
+  border: none;
+}
+
+.modal .btn-cancel { background: var(--beige); color: var(--ink); }
+.modal .btn-save { background: var(--gold); color: var(--white); }
+
+/* ==================== CONFIRMATION ==================== */
+.confirm-box {
+  text-align: center;
+  padding: 48px 24px;
+}
+
+.confirm-box .check-circle {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: var(--success-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+  font-size: 32px;
+  color: var(--success);
+}
+
+.confirm-box .ref-num {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--gold-dark);
+  background: var(--beige);
+  padding: 12px 28px;
+  border-radius: var(--radius-sm);
+  display: inline-block;
+  letter-spacing: 0.04em;
+  font-family: var(--font);
+}
+
+/* Progress bar */
+.progress-bar {
+  height: 3px;
+  background: var(--border-light);
+  border-radius: 2px;
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+
+.progress-bar .fill {
+  height: 100%;
+  background: var(--gold);
+  transition: width 0.3s ease;
+  border-radius: 2px;
+}
+
+/* ============================================================
+   OCR REVIEW PATTERN (Pattern B)
+   ============================================================ */
+
+/* Wraps any extracted field. The wrapper is what shows the badge + state. */
+.field.review-extracted input,
+.field.review-extracted select,
+.field.review-extracted textarea {
+  background: #fff8e1;          /* soft amber */
+  border-color: #f0c74e;
+}
+
+.field.review-confirmed input,
+.field.review-confirmed select,
+.field.review-confirmed textarea {
+  background: #effaf3;          /* soft green */
+  border-color: #b6dabf;
+}
+
+.review-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-left: 8px;
+  cursor: pointer;
+  user-select: none;
+  vertical-align: middle;
+  transition: all 0.15s ease;
+}
+
+.review-badge.extracted {
+  background: #fff3cd;
+  color: #8a6d1c;
+  border: 1px solid #f0c74e;
+}
+.review-badge.extracted:hover {
+  background: #ffe9a0;
+}
+.review-badge.confirmed {
+  background: #e1f3e7;
+  color: #2c6b3e;
+  border: 1px solid #b6dabf;
+}
+
+/* Inline confirm/edit hint shown when a field is in 'extracted' state */
+.review-hint {
+  font-size: 12px;
+  color: #8a6d1c;
+  margin-top: 4px;
+  padding: 6px 10px;
+  background: #fff8e1;
+  border-left: 3px solid #f0c74e;
+  border-radius: 2px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.review-hint button {
+  appearance: none;
+  border: 1px solid #f0c74e;
+  background: white;
+  color: #6b5614;
+  padding: 3px 10px;
+  border-radius: 14px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+.review-hint button:hover { background: #fff8e1; }
+
+/* Subtle visual cue for required fields that are still empty.
+   Applied to .field wrappers with the .field-required-empty class.
+   Goal: visible reminder, not an error — customer sees the work remaining
+   without us yelling at them. */
+.field.field-required-empty input,
+.field.field-required-empty select,
+.field.field-required-empty textarea {
+  background: linear-gradient(to right, #fffaef 0%, #fff 60%);
+  border-color: #e8d8a8;
+}
+.field.field-required-empty input:focus,
+.field.field-required-empty select:focus,
+.field.field-required-empty textarea:focus {
+  background: #fff;
+  border-color: var(--gold);
+}
+
+/* Section-level extraction-review banner.
+   Shown once per section when fields have been extracted but not yet confirmed.
+   One-click confirms all fields in the section. */
+.section-review-banner {
+  margin: 0 0 16px;
+  padding: 12px 16px;
+  background: #fff8e1;
+  border: 1px solid #f0c74e;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  font-size: 14px;
+  color: #6b5614;
+}
+.section-review-banner.confirmed {
+  background: #effaf3;
+  border-color: #b6dabf;
+  color: #2c6b3e;
+}
+.section-review-banner .label {
+  flex: 1;
+}
+.section-review-banner button {
+  appearance: none;
+  border: 1px solid #f0c74e;
+  background: white;
+  color: #6b5614;
+  padding: 6px 16px;
+  border-radius: 16px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.section-review-banner button:hover { background: #fff8e1; }
+
+/* OCR status banner shown above an upload-related section */
+.ocr-status {
+  margin: 10px 0;
+  padding: 10px 14px;
+  border-radius: 4px;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.ocr-status.extracting {
+  background: #eef4fb;
+  color: #244b6e;
+  border-left: 3px solid #5a8bc7;
+}
+.ocr-status.success {
+  background: #effaf3;
+  color: #2c6b3e;
+  border-left: 3px solid #6bbf85;
+}
+.ocr-status.error {
+  background: #fbe9e9;
+  color: #8a2424;
+  border-left: 3px solid #c75a5a;
+}
+
+.ocr-spinner {
+  width: 16px; height: 16px;
+  border: 2px solid #cdd5e1;
+  border-top-color: #5a8bc7;
+  border-radius: 50%;
+  animation: ocr-spin 0.6s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes ocr-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* Banner at top of pages with unreviewed fields */
+.review-banner {
+  margin: 16px 0;
+  padding: 14px 18px;
+  background: #fff8e1;
+  border: 1px solid #f0c74e;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #6b5614;
+}
+.review-banner strong { color: #4a3c0e; }
+
+/* Multi-select 'other' free-text field — appears below the checkboxes */
+.other-text-input {
+  margin-top: 10px;
+  padding: 10px;
+  background: #f7f9fa;
+  border-left: 3px solid var(--gold);
+  border-radius: 2px;
+}
+.other-text-input label {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 4px;
+}
+.other-text-input input {
+  font-size: 14px;
+}
+
+/* ==================== MOBILE POLISH ====================
+   Comprehensive mobile responsive overrides. Cutoff is 768px — phones
+   in portrait (~360-430px) and tablets in portrait (~768px) both get
+   the stacked layout. Above 768px, the existing desktop layout applies.
+
+   Goal: production-grade applicant experience on phones. Most UAE
+   SME applicants will use this on mobile.
+   ======================================================== */
+@media (max-width: 768px) {
+  /* Mobile top bar — show always, with a step indicator. */
+  .mobile-bar {
+    display: flex;
+    padding: 0 12px;
+    gap: 10px;
+  }
+  .mobile-bar .mob-title { display: none; }   /* Replace with step indicator */
+  .mobile-bar .mob-step {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.15;
+    flex: 1;
+    min-width: 0;
+  }
+  .mobile-bar .mob-step .step-label {
+    font-size: 11px;
+    color: var(--gold-dark);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .mobile-bar .mob-step .step-title {
+    font-family: var(--font-display);
+    font-size: 15px;
+    color: var(--ink);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .mobile-bar .mob-progress {
+    height: 3px;
+    background: var(--border-light);
+    border-radius: 2px;
+    margin-top: 4px;
+    overflow: hidden;
+  }
+  .mobile-bar .mob-progress .bar {
+    height: 100%;
+    background: var(--gold);
+    transition: width 0.25s ease;
+  }
+
+  /* Hide mob-step / progress on desktop */
+  .mobile-bar .mob-step,
+  .mobile-bar .mob-progress { display: flex; }
+
+  /* Main content — tighten padding on phones. */
+  .main-content {
+    padding: 16px 14px 32px;
+    padding-top: 76px;     /* below the 56px mobile-bar with breathing room */
+  }
+
+  /* Page header — smaller hero on mobile. */
+  .page-header { margin-bottom: 18px; padding-bottom: 14px; }
+  .page-header h1 { font-size: 22px; line-height: 1.25; }
+  .page-header .kicker { font-size: 10px; }
+  .page-header p.intro { font-size: 14px; line-height: 1.45; }
+
+  /* Sections — tighter padding, less rounded so they feel native. */
+  .section {
+    padding: 14px 14px;
+    margin-bottom: 14px;
+    border-radius: 6px;
+  }
+  .section h2 {
+    font-size: 14px;
+    margin-bottom: 12px;
+  }
+
+  /* Field rows — stack everything (override the 600px breakpoint with 768px). */
+  .field-row, .field-row-3 { grid-template-columns: 1fr; gap: 12px; }
+  .field { margin-bottom: 12px; }
+  .field label { font-size: 13px; }
+
+  /* Inputs — slightly larger touch target. iOS Safari zooms in if font-size
+     under 16px on input focus, so we force 16px to prevent that annoying zoom. */
+  .field input[type="text"],
+  .field input[type="email"],
+  .field input[type="tel"],
+  .field input[type="number"],
+  .field input[type="date"],
+  .field select,
+  .field textarea {
+    font-size: 16px;
+    padding: 11px 12px;
+    min-height: 44px;
+  }
+
+  /* Radio / check groups — full width tiles. */
+  .radio-group label, .check-group label {
+    padding: 12px 14px;
+    font-size: 14px;
+  }
+
+  /* Buttons — full width on mobile. */
+  .btn {
+    width: 100%;
+    padding: 14px 20px;
+    font-size: 15px;
+  }
+  .btn + .btn { margin-top: 10px; }   /* When stacked */
+
+  /* Page footer (Back / Next) — stack into column with primary on top. */
+  .page-footer {
+    flex-direction: column-reverse;
+    gap: 0;
+    padding: 16px 0 0;
+  }
+  .page-footer .btn-back { width: 100%; }
+  .page-footer .btn-next,
+  .page-footer .btn-submit { width: 100%; }
+
+  /* File upload — bigger touch target, clearer label. */
+  .upload-box {
+    padding: 18px 14px;
+    border-radius: 6px;
+  }
+  .upload-box .upload-icon { font-size: 28px; }
+  .upload-box .upload-label { font-size: 14px; }
+  .upload-box .upload-hint { font-size: 11px; }
+
+  /* File preview — wrap nicely; thumbnail fixed size. */
+  .upload-preview {
+    flex-wrap: wrap;
+    padding: 10px 12px;
+    gap: 10px;
+  }
+  .upload-preview img { width: 48px; height: 48px; }
+  .upload-preview .file-name { font-size: 13px; }
+
+  /* OTP input — 4-digit code centered, large, easy to focus. */
+  .otp-input-wrap {
+    max-width: 100% !important;
+  }
+
+  /* Resume banner / warning callouts — full width, less padding. */
+  .note-box, .section-review-banner {
+    padding: 12px 14px;
+    border-radius: 6px;
+  }
+  .section-review-banner {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .section-review-banner button { width: 100%; }
+
+  /* Modal — full-screen on mobile so users don't fight a tiny popup. */
+  .modal-overlay { padding: 0; }
+  .modal-card {
+    width: 100%;
+    height: 100%;
+    max-height: 100vh;
+    border-radius: 0;
+    margin: 0;
+  }
+
+  /* Specifically narrow phones — sub-380px (older iPhone SE, small Androids). */
+  @media (max-width: 380px) {
+    .main-content { padding-left: 10px; padding-right: 10px; }
+    .section { padding: 12px 12px; }
+    .page-header h1 { font-size: 20px; }
+    .btn { font-size: 14px; padding: 12px 16px; }
+  }
+}
+
+/* ==================== END MOBILE POLISH ==================== */
+</style>
+</head>
+<body>
+
+<!-- Mobile top bar — visible only at <=768px viewport widths. The step
+     indicator and progress bar are populated by updateMobileBar() in render(). -->
+<div class="mobile-bar">
+  <button class="hamburger" onclick="toggleRail()" aria-label="Open menu">☰</button>
+  <span class="mob-title">MFP KYB Portal</span>
+  <div class="mob-step" id="mobStep">
+    <div class="step-label" id="mobStepLabel">Step 1 of 5</div>
+    <div class="step-title" id="mobStepTitle">Let's get started</div>
+    <div class="mob-progress"><div class="bar" id="mobProgressBar" style="width:20%"></div></div>
+  </div>
+</div>
+<div class="rail-overlay" id="railOverlay" onclick="toggleRail()"></div>
+
+<div class="app">
+  <aside class="rail" id="rail">
+    <div class="rail-brand">
+      <h1>Mawarid Finance</h1>
+      <div class="subtitle">KYB Portal</div>
+    </div>
+    <ul class="rail-nav" id="railNav"></ul>
+    <div class="rail-footer">
+      <div style="font-size:11px;color:var(--muted-light);text-align:center">Mawarid Finance PJSC</div>
+    </div>
+  </aside>
+
+  <main class="main-content" id="main"></main>
+</div>
+
+<script>
+/* ==========================================================================
+   MFP KYB Portal — v3
+   --------------------------------------------------------------------------
+   Single dynamic flow. No OCR — ops reads documents on the back end.
+
+   Flow:
+     1. Business & Contact
+     2. About your Business (TL upload + a few structural questions)
+     3. Owners & Signatories (people details — minimal for sole owner)
+     4. Documents (all remaining docs, conditional)
+     5. Declarations & Submit
+     6. Confirmation
+   ========================================================================== */
+
+const S = {
+  /* ----- Page 1 ----- */
+  businessName: '', applicantName: '', email: '', mobile: '',
+
+  /* ----- Page 2 — About your Business ----- */
+  tlDoc: null,
+  // The single structural question that drives corporate-doc requirements.
+  structureType: '',          // 'sole_owner' | 'multi'
+  // Sole-owner-only follow-up:
+  ownerIsSignatory: '',        // 'yes' | 'no' (only asked when structureType === 'sole_owner')
+  // Sole-owner: is the applicant filling the form ALSO the owner?
+  applicantIsOwner: '',        // 'yes' | 'no'
+  // BOTH modes: is the applicant filling the form ALSO the authoriser (the
+  // person who'll legally represent the business at Mawarid)?
+  // Default '' until they answer. If 'no', we collect details from the
+  // applicant but tag them as applicant-only and emit a system comment for ops.
+  applicantIsAuthoriser: '',   // 'yes' | 'no'
+  // Universal yes/no
+  hasEmployees: '',            // 'yes' | 'no'
+  // Multi-only follow-up:
+  shareholderCount: '',        // '2' | '3' | '4' | 'more'
+  hasEntityShareholders: '',   // 'yes' | 'no'
+  signatoryCount: '1',         // '1' | '2' | '3' | '4'
+
+  /* ----- Page 2 — Trade License extracted fields (Corporate CIF) ----- */
+  // Auto-populated when TL is uploaded; customer reviews and confirms
+  tl: {
+    legalType: '',           // canonical code from /api/match-legal-type
+    legalTypeRaw: '',        // raw OCR text — shown to customer for verification
+    licenseNumber: '',
+    companyNameEn: '',
+    companyNameAr: '',
+    tradeName: '',
+    issueDate: '',           // YYYY-MM-DD
+    expiryDate: '',
+    registerNumber: '',
+    issuingAuthority: '',    // OCR'd authority name; canonical code derived if matchable
+    issuingAuthorityCode: '',
+    activitiesText: '',
+    emirate: '',             // canonical code (e.g., 'dubai')
+  },
+
+  /* ----- Page 3 — About You (the Authoriser / Retail CIF) ----- */
+  authoriser: {
+    // Identity (most fields auto-extracted from EID/Passport)
+    firstName: '', middleName: '', lastName: '',
+    nameArabic: '',
+    fatherName: '',
+    dob: '', gender: '', salutation: '',
+    nationality: '', citizenship: '',  // citizenship defaults to nationality
+    countryOfBirth: '',
+    placeOfBirth: '',
+    countryOfResidence: 'AE',
+    maritalStatus: '',
+    numberOfDependents: '',
+    preferredLanguage: 'english',
+
+    // ID documents
+    idType: '',  // 'emirates_id' | 'passport'
+    eidNumber: '', eidIssuanceDate: '', eidExpiryDate: '',
+    residenceVisaExpiry: '',
+    passportNumber: '', passportIssuanceDate: '',
+    passportIssuanceCountry: '', passportExpiryDate: '',
+    eidFrontDoc: null, eidBackDoc: null, passportDoc: null,
+
+    // Address
+    addressType: 'residential',
+    buildingName: '', street: '', area: '',
+    city: '', emirate: '', poBox: '',
+    addressCountry: 'AE',
+    residenceType: '',
+    officePhone: '',
+
+    // Tax
+    taxYN: '', taxNumber: '',
+
+    // Profession
+    occupation: 'business_owner',
+    jobTitle: '',
+    activityStatus: 'self_employed',
+    economicSector: '',
+    sourceOfIncome: [],         // multi-select array of codes
+    sourceOfIncomeOther: '',
+    incomeCurrency: 'AED',
+    monthlySalary: '',
+
+    // PEP
+    isPep: '',                  // code from is_pep LOV
+    pepPositionCountry: '',     // free text follow-up
+    pepSourceOfWealthNarrative: '',
+
+    // Wealth
+    sourceOfWealth: [],         // multi-select array of codes
+    sourceOfWealthOther: '',
+
+    // Sanctions
+    sanctions: '',              // 'yes' | 'no'
+    sanctionsDescription: '',
+
+    // KYC
+    isBeneficialOwner: '',      // for sole prop, auto 'yes'
+  },
+
+  /* ----- Corporate-level fields ----- */
+  corporate: {
+    // Activity / Funds
+    sourceOfFunds: [],          // multi-select; for sole prop, defaults from authoriser.sourceOfIncome
+    sourceOfFundsOther: '',
+    purposeOfAccount: [],
+    purposeOfAccountOther: '',
+
+    // Tax
+    taxIndicator: '',           // 'yes' | 'no'
+    vatTrn: '',                 // OCR-extracted from VAT cert
+
+    // Address (defaults from TL emirate; customer can override)
+    addressType: 'business',
+    buildingName: '', street: '', area: '',
+    city: '', emirate: '', poBox: '',
+    addressCountry: 'AE',
+    sameAsAuthoriser: 'no',     // for sole prop, often 'yes'
+
+    // Contact (defaults from authoriser; customer can override)
+    email: '', mobile: '', officePhone: '',
+    sameContactAsAuthoriser: 'yes',
+    website: '',
+
+    // KYC
+    estimatedMonthlyTurnover: '',
+    annualExpectedTurnover: '',
+    numberOfEmployees: '0',     // band code
+
+    // Tenancy
+    tenancyExpiryDate: '',      // OCR-extracted from tenancy contract
+  },
+
+  /* ----- Page 3/4 — Owners & Signatories ----- */
+  // Slot 0 doubles as "the owner" in sole_owner mode, or "shareholder 1" in multi mode
+  shareholders: [
+    { name: '', nationality: '', pct: '', isUaeResident: 'yes', isEntity: 'no' },
+    { name: '', nationality: '', pct: '', isUaeResident: 'yes', isEntity: 'no' },
+    { name: '', nationality: '', pct: '', isUaeResident: 'yes', isEntity: 'no' },
+    { name: '', nationality: '', pct: '', isUaeResident: 'yes', isEntity: 'no' },
+  ],
+  additionalShareholderNames: '',
+  additionalShareholderPct: '',
+  // External signatory (single block — used when sole_owner says "owner is NOT signatory")
+  externalSignatory: { name: '', nationality: '', isUaeResident: 'yes', email: '', mobile: '', dob: '', isPep: '' },
+  // Multi-mode signatories (linked or new)
+  signatories: [
+    { mode: '', linkedShIdx: '', name: '', nationality: '', isUaeResident: 'yes' },
+    { mode: '', linkedShIdx: '', name: '', nationality: '', isUaeResident: 'yes' },
+    { mode: '', linkedShIdx: '', name: '', nationality: '', isUaeResident: 'yes' },
+    { mode: '', linkedShIdx: '', name: '', nationality: '', isUaeResident: 'yes' },
+  ],
+  uboConfirmed: false,           // only required in multi mode
+
+  /* ----- Documents ----- */
+  vatCertDoc: null,
+  vatReturnDoc: null,            // optional even when VAT-registered
+  tenancyContractDoc: null,      // NEW — flagged R in Excel; required for address proof
+  shIdDocs: [
+    { eidFront: null, eidBack: null, passport: null },
+    { eidFront: null, eidBack: null, passport: null },
+    { eidFront: null, eidBack: null, passport: null },
+    { eidFront: null, eidBack: null, passport: null },
+  ],
+  externalSignatoryIdDoc: { eidFront: null, eidBack: null, passport: null },
+  sigIdDocs: [
+    { eidFront: null, eidBack: null, passport: null },
+    { eidFront: null, eidBack: null, passport: null },
+    { eidFront: null, eidBack: null, passport: null },
+    { eidFront: null, eidBack: null, passport: null },
+  ],
+  entityShTLs: [null, null, null, null],
+  moaDoc: null,
+  aoaDoc: null,
+  shareCertDoc: null,
+  boardResolutionDoc: null,
+  poaDoc: null,
+  mohreDoc: null,
+  additionalDocs: null,          // always optional
+
+  /* ----- Declarations (page) ----- */
+  pepStatus: '', sanctionsStatus: '', fatcaUSPerson: '',
+  fatcaW8W9Doc: null,            // Optional W-9 / W-8BEN-E upload when FATCA = Yes
+  consentGiven: false,
+
+  /* ----- Field review status (Pattern B for OCR'd fields) ----- */
+  // Map of dotted-path -> 'extracted' | 'confirmed' | 'manual'
+  // 'extracted' = OCR populated, customer hasn't touched
+  // 'confirmed' = customer reviewed (tapped 'Looks correct' OR edited)
+  // 'manual'    = customer typed from scratch (no OCR involved)
+  // Submission blocks if any 'extracted' status remains.
+  _fieldStatus: {},
+
+  /* ----- OCR transient flags ----- */
+  _tlExtracting: false, _tlExtractError: '',
+  _eidExtracting: false, _eidExtractError: '',
+  _passportExtracting: false, _passportExtractError: '',
+  _vatExtracting: false, _vatExtractError: '',
+  _tenancyExtracting: false, _tenancyExtractError: '',
+
+  /* ----- Transient ----- */
+  _validationMsg: '', _submitting: false, _submitError: '',
+
+  /* ----- OTP / verification (Page 1) ----- */
+  _otpSent: false,              // true after /api/otp/send succeeds
+  _otpVerified: false,          // true after /api/otp/verify succeeds
+  _otpCodeSms: '',              // what the user typed for the SMS code (4 digits)
+  _otpSending: false,           // in-flight send (disable button)
+  _otpVerifying: false,         // in-flight verify
+  _otpError: '',                // last error message from server
+  _otpResendCooldown: 0,        // seconds until resend allowed (counted down by setInterval)
+  _refNumber: null,             // returned by /api/otp/verify; used by /api/submit and confirmation
+};
+
+let curPage = 1;
+let maxReachedPage = 1;
+const totalPages = 6;
+let _refNum = null;
+let _lastPage = 1;
+
+/* ============================================================
+   SESSION TRACKING
+   ============================================================
+   On first load, we generate a UUID v4 in localStorage. Every page
+   transition is reported to the server so we can see funnel drop-off.
+   The session row exists from the first page load — applications row
+   only gets created on OTP verify (see /api/otp/verify).
+
+   Pages are referenced by stable string IDs, not page numbers, so
+   the analytics survive flow reorganisations.
+   ============================================================ */
+const PAGE_IDS = {
+  1: 'business_contact',
+  2: 'tl_and_structure',
+  3: 'owners_signatories',
+  4: 'documents',
+  5: 'declarations',
+  6: 'confirmation',
+};
+
+let SESSION_ID = null;
+let _maxPageIdReached = 'business_contact';
+
+function ensureSessionId() {
+  if (SESSION_ID) return SESSION_ID;
+  try {
+    SESSION_ID = localStorage.getItem('kyb_session_id');
+  } catch (e) { /* localStorage may be disabled */ }
+  if (!SESSION_ID) {
+    // UUID v4. crypto.randomUUID exists in all modern browsers.
+    SESSION_ID = (crypto.randomUUID && crypto.randomUUID()) || _uuidV4Fallback();
+    try { localStorage.setItem('kyb_session_id', SESSION_ID); } catch (e) {}
+  }
+  return SESSION_ID;
+}
+
+function _uuidV4Fallback() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+    const r = (Math.random() * 16) | 0;
+    return (c === 'x' ? r : (r & 0x3) | 0x8).toString(16);
+  });
+}
+
+async function sessionStart() {
+  ensureSessionId();
+  try {
+    await fetch('/api/session/start', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        session_id: SESSION_ID,
+        page_id: PAGE_IDS[1],
+        user_agent: navigator.userAgent,
+        referrer: document.referrer || '',
+      }),
+    });
+  } catch (e) {
+    // Non-fatal: analytics shouldn't block the form. Log and continue.
+    console.warn('[session/start] failed', e);
+  }
+}
+
+async function sessionPage(fromPage, toPage) {
+  if (!SESSION_ID) return;
+  const fromId = PAGE_IDS[fromPage] || String(fromPage);
+  const toId   = PAGE_IDS[toPage]   || String(toPage);
+  // Decide whether toPage is further than anywhere we've been before.
+  const order = Object.keys(PAGE_IDS).map(Number).sort((a, b) => a - b);
+  const maxIdx = order.indexOf(Number(Object.entries(PAGE_IDS).find(([k, v]) => v === _maxPageIdReached)?.[0]));
+  const toIdx  = order.indexOf(toPage);
+  const isFurther = toIdx > maxIdx;
+  if (isFurther) _maxPageIdReached = toId;
+  try {
+    await fetch('/api/session/page', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        session_id: SESSION_ID,
+        from_page: fromId,
+        to_page: toId,
+        is_further: isFurther,
+      }),
+    });
+  } catch (e) {
+    console.warn('[session/page] failed', e);
+  }
+}
+
+/* ============================================================
+   DRAFT SAVE — /api/draft-save
+   ============================================================
+   Saves a snapshot of the current form state to the server so the
+   applicant can resume later. Called automatically on page transitions
+   and after the OTP step. Debounced so back-to-back nav clicks coalesce
+   into one network call.
+
+   The backend stores the snapshot on applications.draft_state_json.
+   Currently no UI restores it on a returning visit — that's a separate
+   TODO. But by saving from day one we're not losing any data.
+   ============================================================ */
+let _draftSaveTimer = null;
+function scheduleDraftSave(currentPageId, delayMs) {
+  if (_draftSaveTimer) clearTimeout(_draftSaveTimer);
+  _draftSaveTimer = setTimeout(() => {
+    _draftSaveTimer = null;
+    doDraftSave(currentPageId).catch(e => console.warn('[draft-save] failed', e));
+  }, delayMs || 800);
+}
+
+async function doDraftSave(currentPageId) {
+  if (!SESSION_ID) return;
+  // Strip file blobs from the snapshot — they're already in the documents
+  // table via /api/upload, and including them would balloon the payload.
+  const snapshot = JSON.parse(JSON.stringify(S, (k, v) => {
+    if (k === 'data' || k === 'thumb') return undefined;
+    if (k.startsWith('_')) return undefined;
+    return v;
+  }));
+  try {
+    await fetch('/api/draft-save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        session_id: SESSION_ID,
+        state: snapshot,
+        current_page: currentPageId,
+      }),
+    });
+  } catch (e) {
+    // Non-fatal. Drafts are best-effort.
+    console.warn('[draft-save] network error', e);
+  }
+}
+
+/* ============================================================
+   RESUME ON RETURNING VISIT — /api/draft-load + /api/session/reset
+   ============================================================
+   On bootstrap we ask the server "does this session_id have a saved
+   draft to resume?" If yes, we stash the response in _resumePrompt
+   and show a banner on Page 1 with two buttons:
+       - Resume → restoreDraft(): merge state, jump to saved page
+       - Start Over → resetSession(): mint a new session_id; old draft
+                      stays in DB as an abandoned attempt
+
+   If the server says the linked application was already submitted from
+   another device, we show a different banner — "already submitted" —
+   with only a Start New button.
+   ============================================================ */
+
+// Possible shapes once populated:
+//   { state: 'draft_available',  ref_number, current_page, draft_state, ... }
+//   { state: 'already_submitted', ref_number, submitted_at }
+//   null  → no prompt
+let _resumePrompt = null;
+
+// Pages that count as "meaningful progress" — banner only shows if the
+// applicant reached at least this point. Stops us nagging about a
+// half-filled Page 1.
+const _RESUME_MIN_PAGE_IDS = ['tl_and_structure', 'owners_signatories',
+                              'documents', 'declarations', 'confirmation'];
+
+async function checkForResumableDraft() {
+  if (!SESSION_ID) return;
+  try {
+    const resp = await fetch('/api/draft-load', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ session_id: SESSION_ID }),
+    });
+    if (!resp.ok) return;
+    const data = await resp.json();
+    if (!data || data.state === 'no_draft') return;
+
+    if (data.state === 'already_submitted') {
+      _resumePrompt = data;
+      render(true);
+      return;
+    }
+
+    if (data.state === 'draft_available') {
+      // Only surface the banner if there's meaningful progress.
+      const cp = data.current_page || 'business_contact';
+      if (!_RESUME_MIN_PAGE_IDS.includes(cp)) {
+        console.log('[resume] draft exists but minimal progress; skipping banner.');
+        return;
+      }
+      _resumePrompt = data;
+      render(true);
+    }
+  } catch (e) {
+    console.warn('[resume] check failed', e);
+  }
+}
+
+function restoreDraft() {
+  if (!_resumePrompt || _resumePrompt.state !== 'draft_available') return;
+  const draft = _resumePrompt.draft_state || {};
+
+  // Merge the saved snapshot back into S. We overwrite scalar/object fields
+  // we know about; we DON'T clobber transient _-prefixed flags.
+  for (const k of Object.keys(draft)) {
+    if (k.startsWith('_')) continue;
+    S[k] = draft[k];
+  }
+
+  // OTP state: the application row already exists and is verified.
+  // Mark _otpVerified = true so the user isn't asked to re-verify.
+  S._otpVerified = true;
+  S._otpSent = true;          // skip the "send codes" screen on Page 1
+  S._refNumber = _resumePrompt.ref_number;
+
+  // Page navigation: jump to the saved page (or just past Page 1 if the
+  // current_page is 'business_contact' — that's the resume-from-OTP case).
+  const pageIdToNum = {};
+  for (const [num, id] of Object.entries(PAGE_IDS)) pageIdToNum[id] = Number(num);
+  const target = pageIdToNum[_resumePrompt.current_page] || 2;
+  curPage = target;
+  if (curPage > maxReachedPage) maxReachedPage = curPage;
+
+  _resumePrompt = null;
+  render();
+}
+
+async function resetSession() {
+  // Mint a new session_id; old application stays as abandoned draft.
+  const oldId = SESSION_ID;
+  try {
+    const resp = await fetch('/api/session/reset', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ session_id: oldId }),
+    });
+    if (resp.ok) {
+      const data = await resp.json();
+      if (data.session_id) {
+        SESSION_ID = data.session_id;
+        try { localStorage.setItem('kyb_session_id', SESSION_ID); } catch (e) {}
+      }
+    }
+  } catch (e) {
+    console.warn('[session/reset] failed; minting client-side anyway', e);
+    SESSION_ID = (crypto.randomUUID && crypto.randomUUID()) || _uuidV4Fallback();
+    try { localStorage.setItem('kyb_session_id', SESSION_ID); } catch (e) {}
+  }
+
+  // Hard reset S to defaults — easiest is to reload the page.
+  // Avoid full reload (loses dev console state). Instead, blank out fields
+  // we care about and bounce to Page 1.
+  startOverInternal();
+  _resumePrompt = null;
+  render();
+}
+
+/* Banner shown at the top of Page 1 when _resumePrompt is set. */
+function resumeBanner() {
+  if (!_resumePrompt) return '';
+  const p = _resumePrompt;
+
+  if (p.state === 'already_submitted') {
+    return `
+<div style="background:#d4edda;border:1px solid #c3e6cb;border-radius:8px;padding:16px 20px;margin-bottom:24px">
+  <div style="color:#155724;font-weight:700;font-size:15px;margin-bottom:6px">You've already submitted an application from this browser.</div>
+  <div style="color:#155724;font-size:13px;line-height:1.5">
+    Reference: <strong>${esc(p.ref_number)}</strong>
+    ${p.submitted_at ? ` · submitted ${esc(new Date(p.submitted_at).toLocaleString())}` : ''}
+  </div>
+  <div style="margin-top:14px">
+    <button class="btn btn-primary" onclick="resetSession()">Start a new application</button>
+  </div>
+</div>`;
+  }
+
+  if (p.state === 'draft_available') {
+    return `
+<div style="background:#fff3e0;border:1px solid #f0dcc0;border-radius:8px;padding:16px 20px;margin-bottom:24px">
+  <div style="color:#7a6438;font-weight:700;font-size:15px;margin-bottom:6px">Welcome back</div>
+  <div style="color:#5a4a2a;font-size:13px;line-height:1.5">
+    We saved your progress on a previous visit.
+    ${p.business_name ? ` Application for <strong>${esc(p.business_name)}</strong>` : ''}
+    ${p.ref_number ? ` · ref <strong>${esc(p.ref_number)}</strong>` : ''}
+    ${p.saved_at ? ` · last saved ${esc(new Date(p.saved_at).toLocaleString())}` : ''}.
+  </div>
+  <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap">
+    <button class="btn btn-primary" onclick="restoreDraft()">Resume where I left off</button>
+    <button class="btn btn-back" onclick="resetSession()">Start over with a new application</button>
+  </div>
+</div>`;
+  }
+
+  return '';
+}
+
+/* ============================================================
+   OTP HELPERS
+   ============================================================
+   SMS-only verification: a single 4-digit code is sent to the
+   applicant's mobile. Email is collected on Page 1 but is not
+   verified by code (it's used for the post-submission confirmation
+   email). While OTP_FIXED_CODE_MODE is on (dev), the code is
+   forced to OTP_FIXED_CODE (default 7861) and no real SMS is sent.
+   ============================================================ */
+
+async function otpSend() {
+  if (S._otpSending) return;
+
+  // Validate mobile shape locally so we give a clean message rather than
+  // a server 400.
+  const mobileWire = fullMobileForWire(S.mobile);
+  if (!mobileWire) {
+    S._otpError = 'Please enter a 9-digit UAE mobile number starting with 5 (e.g. 501234567).';
+    render(true);
+    return;
+  }
+
+  S._otpSending = true;
+  S._otpError = '';
+  render(true);
+
+  try {
+    const resp = await fetch('/api/otp/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: S.email.trim(),
+        mobile: mobileWire,
+        session_id: SESSION_ID,
+      }),
+    });
+
+    // Server may return non-JSON on internal errors. Read as text first,
+    // then try to parse as JSON. Surface a clean message either way.
+    const bodyText = await resp.text();
+    let data = null;
+    try { data = bodyText ? JSON.parse(bodyText) : null; } catch (_) { /* not JSON */ }
+
+    if (!resp.ok) {
+      const msg = (data && data.detail)
+        ? data.detail
+        : `Server error (${resp.status}). Please try again.`;
+      console.error('[otp/send] failed:', resp.status, bodyText);
+      if (data && data.traceback) console.error('[otp/send] traceback:', data.traceback.join('\n'));
+      throw new Error(msg);
+    }
+
+    S._otpSent = true;
+    S._otpSending = false;
+    S._otpResendCooldown = 30;
+    _startResendCountdown();
+    render(true);
+  } catch (e) {
+    S._otpSending = false;
+    S._otpError = e.message || 'Could not send the verification code. Please try again.';
+    render(true);
+  }
+}
+
+function _startResendCountdown() {
+  if (window._otpCountdownTimer) clearInterval(window._otpCountdownTimer);
+  window._otpCountdownTimer = setInterval(() => {
+    if (S._otpResendCooldown > 0) {
+      S._otpResendCooldown--;
+      // Update the countdown text in place instead of re-rendering the whole
+      // page. Re-rendering tears down and recreates the OTP input fields
+      // every second, which kicks the cursor out while the user is typing.
+      _updateResendCountdownInPlace();
+    } else {
+      clearInterval(window._otpCountdownTimer);
+      window._otpCountdownTimer = null;
+      // Final state change (cooldown reached 0 → "Resend codes" link reappears):
+      // a one-time render is fine here because the user isn't actively typing
+      // a code in the moment between countdown end and re-render. But if they
+      // are, the resend link toggle isn't critical — defer the re-render until
+      // they finish.
+      const el = document.getElementById('otpResendArea');
+      if (el) {
+        el.innerHTML = `<a href="#" onclick="event.preventDefault();otpSend()" style="color:#8a6e3a;font-weight:600">Resend codes</a>`;
+      }
+    }
+  }, 1000);
+}
+
+function _updateResendCountdownInPlace() {
+  const el = document.getElementById('otpResendArea');
+  if (!el) return;
+  el.innerHTML = `<span style="color:#aaa">Resend in ${S._otpResendCooldown}s</span>`;
+}
+
+async function otpVerifyAndContinue() {
+  if (S._otpVerifying) return;
+  const codeSms = (S._otpCodeSms || '').trim();
+  if (!codeSms || codeSms.length !== 4) {
+    S._otpError = 'Please enter the 4-digit code we sent to your mobile.';
+    render(true);
+    return;
+  }
+  S._otpVerifying = true;
+  S._otpError = '';
+  render(true);
+
+  try {
+    const mobileWire = fullMobileForWire(S.mobile);
+    const resp = await fetch('/api/otp/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: S.email.trim(),
+        mobile: mobileWire,
+        code_sms: codeSms,
+        session_id: SESSION_ID,
+        business_name: S.businessName.trim(),
+        applicant_name: S.applicantName.trim(),
+      }),
+    });
+
+    const bodyText = await resp.text();
+    let data = null;
+    try { data = bodyText ? JSON.parse(bodyText) : null; } catch (_) {}
+
+    if (!resp.ok) {
+      const msg = (data && data.detail)
+        ? data.detail
+        : `Server error (${resp.status}). Please try again.`;
+      console.error('[otp/verify] failed:', resp.status, bodyText);
+      if (data && data.traceback) console.error('[otp/verify] traceback:', data.traceback.join('\n'));
+      throw new Error(msg);
+    }
+
+    S._otpVerified = true;
+    S._otpVerifying = false;
+    S._otpError = '';
+    S._refNumber = (data && data.ref_number) || null;
+
+    // Backend may rotate session_id if this verify started a fresh application
+    // (e.g. user submitted before and is now starting another). Adopt the new
+    // session_id from the response so subsequent calls go to the right row.
+    if (data && data.session_id && data.session_id !== SESSION_ID) {
+      SESSION_ID = data.session_id;
+      try { localStorage.setItem('kyb_session_id', SESSION_ID); } catch (e) {}
+    }
+    render(true);
+
+    // Advance to Page 2 once verified.
+    const fromPg = curPage;
+    curPage = 2;
+    if (curPage > maxReachedPage) maxReachedPage = curPage;
+    sessionPage(fromPg, curPage);
+    scheduleDraftSave(PAGE_IDS[curPage], 200);  // small delay; app row now exists
+    render();
+  } catch (e) {
+    S._otpVerifying = false;
+    S._otpError = e.message || 'Verification failed. Please try again.';
+    render(true);
+  }
+}
+
+function otpChangeDetails() {
+  // Reset OTP state so the user can edit Page 1 again. They'll have to resend.
+  S._otpSent = false;
+  S._otpVerified = false;
+  S._otpCodeSms = '';
+  S._otpError = '';
+  S._otpResendCooldown = 0;
+  if (window._otpCountdownTimer) {
+    clearInterval(window._otpCountdownTimer);
+    window._otpCountdownTimer = null;
+  }
+  render(true);
+}
+
+/* ============================================================
+   LOV REGISTRY
+   Loaded once from /api/lovs on page load. Cached in this module-local
+   variable. All Selection / Multi-select fields render from this.
+   ============================================================ */
+let LOVS = null;
+let _lovsLoadError = null;
+let _lovsRetrying = false;
+
+async function loadLovs(isRetry) {
+  if (isRetry) _lovsRetrying = true;
+  try {
+    const resp = await fetch('/api/lovs', { cache: 'no-store' });
+    if (!resp.ok) throw new Error('Server returned ' + resp.status);
+    const data = await resp.json();
+    if (!data || typeof data !== 'object' || Object.keys(data).length === 0) {
+      throw new Error('Empty LOV registry');
+    }
+    LOVS = data;
+    _lovsLoadError = null;
+    _lovsRetrying = false;
+    console.log('[LOVs] Loaded', Object.keys(LOVS).length, 'groups');
+    if (isRetry) render(true);  // re-render once retry succeeds so dropdowns populate
+  } catch (e) {
+    console.error('[LOVs] Load failed:', e);
+    _lovsLoadError = e.message || 'Network error';
+    _lovsRetrying = false;
+    // Don't fall back to an empty object — keep LOVS = null so dropdowns
+    // can render a clear error state. Schedule one retry after 2 seconds
+    // for transient network blips.
+    if (!isRetry) {
+      setTimeout(() => loadLovs(true), 2000);
+    }
+  }
+}
+
+function lovOptions(name, currentValue, includeBlank, blankLabel) {
+  if (!LOVS) {
+    // Either still loading on first render, or load failed. Render a placeholder
+    // option so the dropdown is at least visible and not collapsed.
+    return `<option value="">${_lovsLoadError ? '⚠ Could not load options' : 'Loading…'}</option>`;
+  }
+  if (!LOVS[name]) return '<option value="">(no options available)</option>';
+  let html = '';
+  if (includeBlank !== false) {
+    html += `<option value="">${esc(blankLabel || 'Select...')}</option>`;
+  }
+  for (const opt of LOVS[name].options) {
+    const sel = (currentValue === opt.code) ? 'selected' : '';
+    html += `<option value="${esc(opt.code)}" ${sel}>${esc(opt.label)}</option>`;
+  }
+  return html;
+}
+
+function lovLabel(name, code) {
+  if (!LOVS || !LOVS[name]) return code || '';
+  for (const opt of LOVS[name].options) {
+    if (opt.code === code) return opt.label;
+  }
+  return code || '';
+}
+
+function isMultiLov(name) {
+  return !!(LOVS && LOVS[name] && LOVS[name].multi);
+}
+
+function lovCheckboxes(name, currentList, onChangeCallback) {
+  if (!LOVS || !LOVS[name]) return '<div class="help">Loading...</div>';
+  const list = Array.isArray(currentList) ? currentList : [];
+  let html = '<div class="check-group">';
+  for (const opt of LOVS[name].options) {
+    const checked = list.includes(opt.code) ? 'checked' : '';
+    const isSelected = list.includes(opt.code) ? 'selected' : '';
+    html += `<label class="${isSelected}"><input type="checkbox" ${checked} onchange="${onChangeCallback}('${opt.code}')"> ${esc(opt.label)}</label>`;
+  }
+  html += '</div>';
+  return html;
+}
+
+/* ============================================================
+   FIELD STATUS — Pattern B for OCR review
+
+   Status values:
+     undefined / 'manual'  — customer typed it; no review needed
+     'extracted'           — OCR populated the value; customer must review before submit
+     'confirmed'           — customer reviewed (clicked "Looks correct" or edited the value)
+
+   API:
+     fieldStatus(path)              -> current status string
+     setFieldStatus(path, status)   -> set the status
+     markExtracted(path)            -> shorthand for setting 'extracted'
+     confirmField(path)             -> shorthand for setting 'confirmed'
+     anyUnreviewedFields()          -> array of paths still in 'extracted' state
+     unreviewedCountOnPage(pageId)  -> count of unreviewed fields on a given page
+   ============================================================ */
+function fieldStatus(path)  { return S._fieldStatus[path]; }
+function setFieldStatus(path, status) {
+  if (!status) delete S._fieldStatus[path];
+  else S._fieldStatus[path] = status;
+}
+function markExtracted(path) { setFieldStatus(path, 'extracted'); }
+function confirmField(path)  { setFieldStatus(path, 'confirmed'); }
+function anyUnreviewedFields() {
+  return Object.keys(S._fieldStatus).filter(k => S._fieldStatus[k] === 'extracted');
+}
+
+/* When a customer edits a field that was 'extracted', auto-promote to 'confirmed'.
+   Wires onto the binding helpers below. */
+function autoConfirmOnEdit(path) {
+  if (fieldStatus(path) === 'extracted') confirmField(path);
+}
+
+/* ============================================================
+   OCR / EXTRACTION
+   Backend has two paths:
+     - /api/extract  — vision-based (sends image to extraction service directly). Best for IDs.
+     - /api/llm-extract — text-based (we OCR with Tesseract.js, then ask the service to structure).
+                          Better for documents with lots of text (TLs, VAT certs).
+   For v5 we use /api/extract for everything since it's simpler and we already have
+   the document image. If accuracy or cost becomes a problem, swap to text-based for TLs.
+   ============================================================ */
+
+async function serverVisionExtract(doc, docType) {
+  // doc is { name, size, type, data (base64 dataURL) }
+  if (!doc || !doc.data) return null;
+  const base64 = doc.data.split(',')[1];  // strip the data:...;base64, prefix
+  const formData = new FormData();
+  // Reconstitute as Blob so the FastAPI endpoint receives it as UploadFile
+  const byteString = atob(base64);
+  const ia = new Uint8Array(byteString.length);
+  for (let i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
+  const blob = new Blob([ia], { type: doc.type || 'application/octet-stream' });
+  formData.append('file', blob, doc.name || 'doc');
+  formData.append('doc_type', docType);
+
+  const t0 = performance.now();
+  const resp = await fetch('/api/extract', { method: 'POST', body: formData });
+  const elapsed = Math.round(performance.now() - t0);
+
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    console.warn(`[Extract:${docType}] HTTP ${resp.status} after ${elapsed}ms`, err);
+    throw new Error(err.detail || 'Extraction failed (' + resp.status + ')');
+  }
+
+  const data = await resp.json();
+  // Developer-only console logging (not visible to customer)
+  console.log(`[Extract:${docType}] ${elapsed}ms — response:`, data);
+
+  // Server response shape: { success: true, fields: {...}, extraction_id: "..." }
+  // Be tolerant of older shapes that returned the fields directly.
+  const fields = (data && typeof data === 'object' && 'fields' in data) ? data.fields : data;
+  if (!fields || typeof fields !== 'object') {
+    console.warn(`[Extract:${docType}] Unexpected response shape:`, data);
+    return null;
+  }
+  console.log(`[Extract:${docType}] parsed fields:`, fields);
+  return fields;
+}
+
+async function matchLegalType(raw) {
+  if (!raw) return { code: 'other', confident: false, raw: '' };
+  const resp = await fetch('/api/match-legal-type', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ raw }),
+  });
+  if (!resp.ok) return { code: 'other', confident: false, raw };
+  return await resp.json();
+}
+
+/* Trade License extraction — runs immediately after TL upload */
+async function extractTradeLicense() {
+  if (!S.tlDoc) return;
+  S._tlExtracting = true; S._tlExtractError = '';
+  render(true);
+  try {
+    const result = await serverVisionExtract(S.tlDoc, 'tradeLicense');
+    if (!result) throw new Error('Empty extraction response');
+
+    // Map of LLM-response keys to our state field names. Each entry tags whether
+    // the field has a *reviewable UI on Page 2* — only those are marked 'extracted'.
+    // Fields without UI are still captured for the payload but don't gate submission.
+    const m = [
+      // [responseKey, stateKey, hasReviewableUI]
+      ['license_number',  'licenseNumber',  true],
+      ['company_name',    'companyNameEn',  true],
+      ['trade_name',      'tradeName',      true],
+      ['issue_date',      'issueDate',      true],
+      ['expiry_date',     'expiryDate',     true],
+      ['register_number', 'registerNumber', false],  // not displayed on Page 2; captured but not reviewable
+      ['activities',      'activitiesText', true],
+    ];
+    for (const [src, dst, reviewable] of m) {
+      const v = result[src];
+      if (v && String(v).trim()) {
+        S.tl[dst] = String(v).trim();
+        if (reviewable) markExtracted('tl.' + dst);
+      }
+    }
+
+    // Emirate — try to match against the LOV
+    if (result.emirate) {
+      const norm = String(result.emirate).trim().toLowerCase();
+      const map = { 'abu dhabi': 'abu_dhabi', 'dubai': 'dubai', 'sharjah': 'sharjah',
+                    'ajman': 'ajman', 'umm al quwain': 'uaq', 'uaq': 'uaq',
+                    'ras al khaimah': 'rak', 'rak': 'rak', 'fujairah': 'fujairah' };
+      const matched = Object.keys(map).find(k => norm.includes(k));
+      if (matched) {
+        S.tl.emirate = map[matched];
+        markExtracted('tl.emirate');
+      }
+    }
+
+    // Legal type — match via backend
+    if (result.legal_type) {
+      S.tl.legalTypeRaw = String(result.legal_type).trim();
+      const match = await matchLegalType(result.legal_type);
+      S.tl.legalType = match.code;
+      markExtracted('tl.legalType');
+      // Auto-derive structureType from legal type for sole-owner cases
+      const soleOwner = ['sole_proprietorship','opc','llc_single','fze'];
+      if (soleOwner.includes(match.code) && !S.structureType) {
+        S.structureType = 'sole_owner';
+      } else if (!soleOwner.includes(match.code) && match.confident && !S.structureType) {
+        S.structureType = 'multi';
+      }
+    }
+  } catch (e) {
+    console.error('[TL Extract]', e);
+    S._tlExtractError = 'unable_to_read';
+  }
+  S._tlExtracting = false;
+  render(true);
+}
+
+/* Emirates ID extraction — runs when both front and back are uploaded */
+async function extractEID() {
+  const a = S.authoriser;
+  if (!a.eidFrontDoc) return;
+  S._eidExtracting = true; S._eidExtractError = '';
+  render(true);
+  try {
+    const front = await serverVisionExtract(a.eidFrontDoc, 'emiratesIdFront');
+    if (front) {
+      const setIf = (k, v) => { if (v && String(v).trim()) { a[k] = String(v).trim(); markExtracted('authoriser.' + k); } };
+      // Names — split if only full_name present
+      if (front.first_name) setIf('firstName', front.first_name);
+      else if (front.full_name) {
+        const parts = String(front.full_name).trim().split(/\s+/);
+        if (parts.length >= 1) setIf('firstName', parts[0]);
+        if (parts.length >= 2) setIf('lastName', parts.slice(-1)[0]);
+        if (parts.length >= 3) setIf('middleName', parts.slice(1, -1).join(' '));
+      }
+      if (front.last_name) setIf('lastName', front.last_name);
+      setIf('eidNumber', front.card_number);
+      setIf('dob', front.date_of_birth);
+      setIf('eidExpiryDate', front.expiry_date);
+      // Gender, nationality — map to LOV codes
+      if (front.gender) {
+        const g = String(front.gender).trim().toLowerCase();
+        a.gender = g.startsWith('m') ? 'male' : (g.startsWith('f') ? 'female' : '');
+        if (a.gender) markExtracted('authoriser.gender');
+      }
+      if (front.nationality) {
+        const matched = matchCountry(front.nationality);
+        if (matched) {
+          a.nationality = matched;
+          a.citizenship = matched;
+          markExtracted('authoriser.nationality');
+        }
+      }
+    }
+    if (a.eidBackDoc) {
+      const back = await serverVisionExtract(a.eidBackDoc, 'emiratesIdBack');
+      if (back) {
+        // EID back sometimes has father's name in Arabic; not reliably extractable from English-only OCR
+        if (back.card_number && !a.eidNumber) {
+          a.eidNumber = String(back.card_number).trim();
+          markExtracted('authoriser.eidNumber');
+        }
+      }
+    }
+    a.idType = 'emirates_id';
+  } catch (e) {
+    console.error('[EID Extract]', e);
+    S._eidExtractError = 'unable_to_read';
+  }
+  S._eidExtracting = false;
+  render(true);
+}
+
+async function extractPassport() {
+  const a = S.authoriser;
+  if (!a.passportDoc) return;
+  S._passportExtracting = true; S._passportExtractError = '';
+  render(true);
+  try {
+    const result = await serverVisionExtract(a.passportDoc, 'passport');
+    if (result) {
+      const setIf = (k, v) => { if (v && String(v).trim()) { a[k] = String(v).trim(); markExtracted('authoriser.' + k); } };
+      // Names from full_name if individual not provided
+      if (result.full_name && !result.first_name) {
+        const parts = String(result.full_name).trim().split(/\s+/);
+        if (parts.length >= 1) setIf('firstName', parts[0]);
+        if (parts.length >= 2) setIf('lastName', parts.slice(-1)[0]);
+        if (parts.length >= 3) setIf('middleName', parts.slice(1, -1).join(' '));
+      } else {
+        setIf('firstName', result.first_name);
+        setIf('lastName', result.last_name);
+      }
+      setIf('passportNumber', result.passport_number);
+      setIf('dob', result.date_of_birth);
+      setIf('passportExpiryDate', result.expiry_date);
+      setIf('placeOfBirth', result.place_of_birth);
+      setIf('passportIssuanceDate', result.issuance_date || result.date_of_issue);
+      // Father's name — passport bio page sometimes has it
+      setIf('fatherName', result.father_name);
+      // Gender
+      if (result.gender) {
+        const g = String(result.gender).trim().toLowerCase();
+        a.gender = g.startsWith('m') ? 'male' : (g.startsWith('f') ? 'female' : '');
+        if (a.gender) markExtracted('authoriser.gender');
+      }
+      // Nationality / issuing country
+      if (result.nationality) {
+        const matched = matchCountry(result.nationality);
+        if (matched) {
+          a.nationality = matched;
+          a.citizenship = matched;
+          markExtracted('authoriser.nationality');
+        }
+      }
+      if (result.issuing_country) {
+        const matched = matchCountry(result.issuing_country);
+        if (matched) {
+          a.passportIssuanceCountry = matched;
+          markExtracted('authoriser.passportIssuanceCountry');
+        }
+      }
+    }
+    if (!a.idType) a.idType = 'passport';
+  } catch (e) {
+    console.error('[Passport Extract]', e);
+    S._passportExtractError = 'unable_to_read';
+  }
+  S._passportExtracting = false;
+  render(true);
+}
+
+async function extractVATCert() {
+  if (!S.vatCertDoc) return;
+  S._vatExtracting = true; S._vatExtractError = '';
+  render(true);
+  try {
+    // Custom prompt-style — we'll use a generic doc_type and have backend handle it,
+    // but until then, just try the tradeLicense prompt as a fallback (it has trn-like fields).
+    const result = await serverVisionExtract(S.vatCertDoc, 'vatCertificate');
+    if (result && (result.trn || result.tax_registration_number || result.vat_trn)) {
+      const trn = String(result.trn || result.tax_registration_number || result.vat_trn).trim();
+      S.corporate.vatTrn = trn;
+      markExtracted('corporate.vatTrn');
+      S.corporate.taxIndicator = 'yes';
+    }
+  } catch (e) {
+    console.error('[VAT Extract]', e);
+    S._vatExtractError = 'unable_to_read';
+  }
+  S._vatExtracting = false;
+  render(true);
+}
+
+async function extractTenancy() {
+  if (!S.tenancyContractDoc) return;
+  S._tenancyExtracting = true; S._tenancyExtractError = '';
+  render(true);
+  try {
+    const result = await serverVisionExtract(S.tenancyContractDoc, 'tenancyContract');
+    if (result) {
+      // Common fields ops cares about: address, expiry
+      if (result.expiry_date || result.lease_end_date) {
+        S.corporate.tenancyExpiryDate = String(result.expiry_date || result.lease_end_date).trim();
+        markExtracted('corporate.tenancyExpiryDate');
+      }
+      // Address pieces — use these to seed the corporate address if empty
+      const C = S.corporate;
+      if (result.building_name && !C.buildingName) {
+        C.buildingName = String(result.building_name).trim();
+        markExtracted('corporate.buildingName');
+      }
+      if (result.street && !C.street) {
+        C.street = String(result.street).trim();
+        markExtracted('corporate.street');
+      }
+      if (result.area && !C.area) {
+        C.area = String(result.area).trim();
+        markExtracted('corporate.area');
+      }
+      if (result.emirate && !C.emirate) {
+        const norm = String(result.emirate).trim().toLowerCase();
+        const map = { 'abu dhabi': 'abu_dhabi', 'dubai': 'dubai', 'sharjah': 'sharjah',
+                      'ajman': 'ajman', 'umm al quwain': 'uaq',
+                      'ras al khaimah': 'rak', 'fujairah': 'fujairah' };
+        const matched = Object.keys(map).find(k => norm.includes(k));
+        if (matched) {
+          C.emirate = map[matched];
+          markExtracted('corporate.emirate');
+        }
+      }
+    }
+  } catch (e) {
+    console.error('[Tenancy Extract]', e);
+    S._tenancyExtractError = 'unable_to_read';
+  }
+  S._tenancyExtracting = false;
+  render(true);
+}
+
+/* Match an OCR'd country/nationality label to our country LOV alpha-2 code */
+function matchCountry(raw) {
+  if (!raw || !LOVS || !LOVS.country) return '';
+  const norm = String(raw).trim().toLowerCase();
+  // Common aliases
+  const aliases = {
+    'uae': 'AE', 'united arab emirates': 'AE', 'emirati': 'AE', 'emirian': 'AE',
+    'india': 'IN', 'indian': 'IN',
+    'pakistan': 'PK', 'pakistani': 'PK',
+    'philippines': 'PH', 'filipino': 'PH', 'filipina': 'PH',
+    'egypt': 'EG', 'egyptian': 'EG',
+    'jordan': 'JO', 'jordanian': 'JO',
+    'syria': 'SY', 'syrian': 'SY',
+    'lebanon': 'LB', 'lebanese': 'LB',
+    'iran': 'IR', 'iranian': 'IR',
+    'iraq': 'IQ', 'iraqi': 'IQ',
+    'saudi arabia': 'SA', 'saudi': 'SA', 'saudi arabian': 'SA',
+    'kuwait': 'KW', 'kuwaiti': 'KW',
+    'oman': 'OM', 'omani': 'OM',
+    'qatar': 'QA', 'qatari': 'QA',
+    'bahrain': 'BH', 'bahraini': 'BH',
+    'yemen': 'YE', 'yemeni': 'YE',
+    'sudan': 'SD', 'sudanese': 'SD',
+    'morocco': 'MA', 'moroccan': 'MA',
+    'tunisia': 'TN', 'tunisian': 'TN',
+    'palestine': 'PS', 'palestinian': 'PS',
+    'bangladesh': 'BD', 'bangladeshi': 'BD',
+    'sri lanka': 'LK', 'sri lankan': 'LK',
+    'nepal': 'NP', 'nepali': 'NP', 'nepalese': 'NP',
+    'united kingdom': 'GB', 'british': 'GB', 'uk': 'GB', 'great britain': 'GB',
+    'united states': 'US', 'american': 'US', 'usa': 'US', 'us': 'US',
+    'china': 'CN', 'chinese': 'CN',
+    'germany': 'DE', 'german': 'DE',
+    'france': 'FR', 'french': 'FR',
+    'italy': 'IT', 'italian': 'IT',
+    'spain': 'ES', 'spanish': 'ES',
+    'turkey': 'TR', 'turkish': 'TR',
+    'russia': 'RU', 'russian': 'RU',
+    'canada': 'CA', 'canadian': 'CA',
+    'australia': 'AU', 'australian': 'AU',
+  };
+  if (aliases[norm]) return aliases[norm];
+  // Look up by exact label match in LOVS
+  for (const opt of LOVS.country.options) {
+    if (opt.label.toLowerCase() === norm) return opt.code;
+  }
+  // Or by alpha-2 code
+  for (const opt of LOVS.country.options) {
+    if (opt.code.toLowerCase() === norm) return opt.code;
+  }
+  return '';
+}
+
+/* ============================================================
+   FLOW LOGIC
+   ============================================================ */
+function isSoleOwnerFlow() { return S.structureType === 'sole_owner'; }
+function isMultiFlow()     { return S.structureType === 'multi'; }
+function effectiveShareholderCount() {
+  if (isSoleOwnerFlow()) return 1;
+  if (S.shareholderCount === 'more') return 4;
+  return parseInt(S.shareholderCount) || 0;
+}
+function effectiveSignatoryCount() {
+  if (isSoleOwnerFlow()) return 1;
+  return parseInt(S.signatoryCount) || 1;
+}
+function isSignatoryANewPerson(i) { return S.signatories[i] && S.signatories[i].mode === 'new'; }
+function anySignatoryIsNew() {
+  if (!isMultiFlow()) return false;
+  for (let i = 0; i < effectiveSignatoryCount(); i++) {
+    if (isSignatoryANewPerson(i)) return true;
+  }
+  return false;
+}
+function externalSignatoryActive() {
+  return isSoleOwnerFlow() && S.ownerIsSignatory === 'no';
+}
+function poaRequired() {
+  // POA needed when there's a signatory who is NOT a shareholder/owner
+  return externalSignatoryActive() || anySignatoryIsNew();
+}
+
+/* ============================================================
+   BINDING HELPERS
+   ============================================================ */
+function b(key)  { return `oninput="S['${key}']=this.value;autoConfirmOnEdit('${key}')"`; }
+function bsel(key){return `onchange="S['${key}']=this.value;autoConfirmOnEdit('${key}');render(true)"`;}
+function brad(key, val){return `onchange="S['${key}']='${val}';autoConfirmOnEdit('${key}');render(true)"`;}
+function bchk(key){return `onchange="S['${key}']=this.checked;render(true)"`;}
+function bn(path) { return `oninput="setNested('${path}',this.value);autoConfirmOnEdit('${path}')"`; }
+function bseln(path){return `onchange="setNested('${path}',this.value);autoConfirmOnEdit('${path}');render(true)"`;}
+function bradn(path,val){return `onchange="setNested('${path}','${val}');autoConfirmOnEdit('${path}');render(true)"`;}
+
+/* ============================================================
+   REVIEW-AWARE FIELD RENDERING
+
+   reviewClass(path)  — returns 'review-extracted' | 'review-confirmed' | '' to put
+                       on the .field wrapper. Drives the amber/green background.
+
+   Per-field "Review" badges and inline hints have been retired in favour of a
+   single section-level "Confirm extracted details" banner. The amber→green
+   colour transition still happens at the field level so customers can see
+   what was extracted vs what they typed.
+   ============================================================ */
+function reviewClass(path) {
+  const s = fieldStatus(path);
+  if (s === 'extracted') return 'review-extracted';
+  if (s === 'confirmed') return 'review-confirmed';
+  return '';
+}
+// Stubs kept so existing render code can still call them harmlessly. Returning
+// an empty string means they render to nothing.
+function reviewBadge(_path) { return ''; }
+function reviewHint(_path)  { return ''; }
+
+/* Section-level review banner.
+   pathPrefix — the dotted path prefix all extracted fields share, e.g. 'tl.' or 'authoriser.'
+   label      — the user-facing label of the document, e.g. "Trade License"
+
+   Behaviour:
+     - Returns nothing if no fields under pathPrefix are in 'extracted' state
+       (nothing to review or already all confirmed).
+     - Otherwise, renders a banner with a "Confirm extracted details" button
+       that calls confirmAllUnderPrefix() to mark them all confirmed.
+*/
+function sectionReviewBanner(pathPrefix, label) {
+  const pending = anyUnreviewedFields().filter(p => p.startsWith(pathPrefix));
+  if (pending.length === 0) return '';
+  return `<div class="section-review-banner">
+    <span class="label">We've extracted ${pending.length} field${pending.length>1?'s':''} from your ${esc(label)}. Please review the values below — they're highlighted in amber. If everything looks right, click confirm. You can still edit any field.</span>
+    <button onclick="confirmAllUnderPrefix('${pathPrefix}');render(true)">✓ Looks good — confirm</button>
+  </div>`;
+}
+
+function confirmAllUnderPrefix(prefix) {
+  const paths = Object.keys(S._fieldStatus).filter(p => p.startsWith(prefix) && S._fieldStatus[p] === 'extracted');
+  paths.forEach(p => confirmField(p));
+}
+
+/* Empty-required field cue.
+   Returns 'field-required-empty' when:
+     - the value is empty / falsy / empty string
+     - AND the field is required (caller passes required = true)
+   Caller signals required by passing the explicit boolean. */
+function emptyRequiredClass(value, required) {
+  if (!required) return '';
+  if (value === undefined || value === null) return 'field-required-empty';
+  if (typeof value === 'string' && value.trim() === '') return 'field-required-empty';
+  if (Array.isArray(value) && value.length === 0) return 'field-required-empty';
+  return '';
+}
+
+/* Combine reviewClass and emptyRequiredClass into the final .field class string. */
+function fieldClass(path, value, required) {
+  return [reviewClass(path), emptyRequiredClass(value, required)].filter(Boolean).join(' ');
+}
+
+/* Multi-select helpers — checkboxes from a LOV, with optional 'other' free-text.
+   togglePath is the dotted path of the array (e.g., 'authoriser.sourceOfIncome').
+   otherTextPath is the path of the free-text field (e.g., 'authoriser.sourceOfIncomeOther').
+*/
+function toggleNestedArr(path, val) {
+  const arr = getNested(path);
+  if (!Array.isArray(arr)) return;
+  const i = arr.indexOf(val);
+  if (i === -1) arr.push(val); else arr.splice(i, 1);
+  render(true);
+}
+function multiSelectLov(lovName, listPath, otherTextPath) {
+  if (!LOVS || !LOVS[lovName]) return '<div class="help">Loading...</div>';
+  const list = getNested(listPath) || [];
+  let html = '<div class="check-group">';
+  for (const opt of LOVS[lovName].options) {
+    const checked = list.includes(opt.code) ? 'checked' : '';
+    const isSel = list.includes(opt.code) ? 'selected' : '';
+    html += `<label class="${isSel}"><input type="checkbox" ${checked} onchange="toggleNestedArr('${listPath}','${opt.code}')"> ${esc(opt.label)}</label>`;
+  }
+  html += '</div>';
+  // 'Other' free-text field
+  if (otherTextPath && list.includes('other')) {
+    const cur = getNested(otherTextPath) || '';
+    html += `<div class="other-text-input">
+      <label>Please specify</label>
+      <input type="text" value="${esc(cur)}" ${bn(otherTextPath)} placeholder="Briefly describe">
+    </div>`;
+  }
+  return html;
+}
+
+function setNested(path, val) {
+  const tokens = path.replace(/\[(\d+)\]/g, '.$1').split('.');
+  let obj = S;
+  for (let i = 0; i < tokens.length - 1; i++) {
+    obj = obj[isNaN(tokens[i]) ? tokens[i] : parseInt(tokens[i])];
+  }
+  const last = tokens[tokens.length - 1];
+  obj[isNaN(last) ? last : parseInt(last)] = val;
+}
+function getNested(path) {
+  const tokens = path.replace(/\[(\d+)\]/g, '.$1').split('.');
+  let obj = S;
+  for (const t of tokens) {
+    if (obj == null) return undefined;
+    obj = obj[isNaN(t) ? t : parseInt(t)];
+  }
+  return obj;
+}
+
+function sel(cls, isSelected) { return isSelected ? cls + ' selected' : cls; }
+function esc(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ============================================================
+   DATE HELPERS
+
+   The browser's native <input type="date"> shows whatever format the user's
+   locale uses (often MM/DD/YYYY in US, DD/MM/YYYY elsewhere). This causes
+   confusion when reading dates back. We keep the native picker (good UX
+   for selection) but always echo the parsed date below the input in
+   unambiguous DD-MMM-YYYY format (e.g., "15-Mar-2026").
+
+   Backend storage is always ISO YYYY-MM-DD — no change there.
+
+   formatDateDisplay(iso) — convert "2026-03-15" -> "15-Mar-2026"; returns ''
+                            for empty / invalid input.
+   isExpiredDate(iso)    — true if the date is strictly before today.
+============================================================ */
+const _MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+function formatDateDisplay(iso) {
+  if (!iso || typeof iso !== 'string') return '';
+  // Accept "YYYY-MM-DD" or "YYYY-MM-DDTHH:MM:SS..."
+  const m = iso.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!m) return '';
+  const yyyy = parseInt(m[1], 10);
+  const mm   = parseInt(m[2], 10);
+  const dd   = parseInt(m[3], 10);
+  if (mm < 1 || mm > 12 || dd < 1 || dd > 31) return '';
+  return `${String(dd).padStart(2,'0')}-${_MONTHS_SHORT[mm-1]}-${yyyy}`;
+}
+
+function isExpiredDate(iso) {
+  if (!iso || typeof iso !== 'string') return false;
+  const m = iso.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!m) return false;
+  const target = new Date(`${iso.substring(0,10)}T00:00:00`);
+  if (isNaN(target.getTime())) return false;
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  return target < today;
+}
+
+/* ============================================================
+   PAGE REGISTRY
+   ============================================================ */
+const pages = [
+  { id: 1, title: 'Business & Contact',      fn: p1 },
+  { id: 2, title: 'About your Business',     fn: p2 },
+  { id: 3, title: 'Owners & Signatories',    fn: p3 },
+  { id: 4, title: 'Documents',               fn: p4 },
+  { id: 5, title: 'Declarations',            fn: p5 },
+  { id: 6, title: 'Confirmation',            fn: p6 },
+];
+
+/* ============================================================
+   SHARED UI BITS
+   ============================================================ */
+function pageHead(n, title, sub) {
+  return `<div class="progress-bar"><div class="fill" style="width:${(n/totalPages)*100}%"></div></div>
+<div class="page-header">
+  <div class="kicker">Step ${n} of ${totalPages}</div>
+  <h1>${title}</h1>
+  ${sub ? `<p class="sub">${sub}</p>` : ''}
+</div>`;
+}
+
+// Mandatory / Optional badge for document slots
+function docBadge(required) {
+  if (required) return `<span style="display:inline-block;padding:2px 8px;border-radius:10px;background:#fbe9e9;color:#a13b3b;font-size:11px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;margin-left:8px;vertical-align:middle">Required</span>`;
+  return `<span style="display:inline-block;padding:2px 8px;border-radius:10px;background:#eef2f6;color:#5b6670;font-size:11px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;margin-left:8px;vertical-align:middle">Optional</span>`;
+}
+
+function fileUpload(path, label, hint, icon) {
+  const existing = getNested(path);
+  if (existing && typeof existing === 'object') {
+    // Upload-status indicator shown next to the filename
+    let statusBadge = '';
+    if (existing.uploadStatus === 'uploading') {
+      statusBadge = `<span style="color:#7a6438;font-size:11px;margin-left:8px;font-weight:600">⏳ uploading…</span>`;
+    } else if (existing.uploadStatus === 'done') {
+      statusBadge = `<span style="color:#3d6a1f;font-size:11px;margin-left:8px;font-weight:600">✓ uploaded</span>`;
+    } else if (existing.uploadStatus === 'failed') {
+      statusBadge = `<span style="color:#a13b3b;font-size:11px;margin-left:8px;font-weight:600" title="${esc(existing.uploadError||'')}">⚠ upload failed</span>`;
+    }
+    return `<div class="upload-preview">
+      ${existing.thumb ? `<img src="${existing.thumb}" alt="">` : `<div style="width:48px;height:48px;background:var(--beige);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:20px">📄</div>`}
+      <div>
+        <div class="file-name">${esc(existing.name)}${statusBadge}</div>
+        <div class="file-size">${(existing.size/1024).toFixed(0)} KB</div>
+      </div>
+      <button class="remove-btn" onclick="setNested('${path}',null);render()">✕</button>
+    </div>`;
+  }
+  const safeId = 'file_' + path.replace(/[^a-zA-Z0-9]/g, '_');
+  return `<div class="upload-box">
+    <input type="file" id="${safeId}" accept=".pdf,image/*" onchange="handleFile(this,'${path}')" style="display:none">
+    <label for="${safeId}" style="cursor:pointer;display:block">
+      <div class="upload-icon">${icon || '📄'}</div>
+      <div class="upload-label">${label}</div>
+      <div class="upload-hint">${hint}</div>
+    </label>
+  </div>`;
+}
+
+function handleFile(input, path) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 10 * 1024 * 1024) {
+    S._validationMsg = 'File is larger than 10 MB. Please upload a smaller file.';
+    render(true);
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const data = e.target.result;
+    const thumb = file.type.startsWith('image/') ? data : '';
+    setNested(path, {
+      name: file.name, size: file.size, type: file.type,
+      data: data, thumb: thumb,
+      uploadStatus: 'uploading',
+      file_id: null,
+    });
+    render(true);
+    // Kick off the server upload in parallel — non-blocking.
+    uploadFileToServer(file, path);
+    // Hook auto-extraction for documents we OCR
+    triggerExtractionIfNeeded(path);
+  };
+  reader.readAsDataURL(file);
+}
+
+/* ============================================================
+   SERVER UPLOAD — /api/upload
+   ============================================================
+   Sends the file to the backend so it lands on disk and gets a row
+   in the `documents` table. Until this completes, the local state
+   has `uploadStatus: 'uploading'` and no `file_id`. On success,
+   `file_id` is filled in. On failure, status becomes `failed` and
+   the applicant sees a small warning under the file.
+
+   We never block the UI on this — extraction (OCR) runs in parallel,
+   and the applicant can move on through the form. At submit time we
+   wait briefly for any still-uploading files to finish before sending
+   the payload.
+   ============================================================ */
+async function uploadFileToServer(file, path) {
+  const meta = pathToDocMeta(path);
+  const fd = new FormData();
+  fd.append('file', file);
+  fd.append('doc_key',  path);
+  fd.append('doc_type', meta.doc_type);
+  fd.append('session_id', SESSION_ID);
+  if (meta.person_role !== null)  fd.append('person_role',  meta.person_role);
+  if (meta.person_index !== null) fd.append('person_index', meta.person_index);
+
+  try {
+    const resp = await fetch('/api/upload', { method: 'POST', body: fd });
+    const bodyText = await resp.text();
+    let data = null;
+    try { data = bodyText ? JSON.parse(bodyText) : null; } catch (_) {}
+    if (!resp.ok) {
+      const msg = (data && data.detail) ? data.detail : `Server error (${resp.status})`;
+      console.error('[/api/upload] failed:', resp.status, bodyText);
+      if (data && data.traceback) console.error('traceback:', data.traceback.join('\n'));
+      throw new Error(msg);
+    }
+    // Merge the file_id back into the local state for this slot
+    const existing = getNested(path);
+    if (existing && typeof existing === 'object') {
+      existing.file_id = data.file_id;
+      existing.uploadStatus = 'done';
+      setNested(path, existing);
+    }
+    console.log(`[upload] ${path} → file_id ${data.file_id}`);
+  } catch (e) {
+    console.error(`[upload] ${path} failed:`, e);
+    const existing = getNested(path);
+    if (existing && typeof existing === 'object') {
+      existing.uploadStatus = 'failed';
+      existing.uploadError = e.message || 'Upload failed';
+      setNested(path, existing);
+      render(true);
+    }
+  }
+}
+
+/* Map a frontend state path to the metadata the backend wants.
+   Returns { doc_type, person_role, person_index }.
+   doc_type matches the keys in server.py OCR_PROMPTS where applicable;
+   for slots without OCR (MOA, AOA, etc.) it's just a descriptive label. */
+function pathToDocMeta(path) {
+  // Person-specific paths first (most specific match wins)
+  // shIdDocs[N].eidFront / eidBack / passport
+  let m = path.match(/^shIdDocs\[(\d+)\]\.(eidFront|eidBack|passport)$/);
+  if (m) return { doc_type: _docTypeFromIdSlot(m[2]), person_role: 'shareholder', person_index: parseInt(m[1], 10) };
+
+  // sigIdDocs[N].eidFront / eidBack / passport
+  m = path.match(/^sigIdDocs\[(\d+)\]\.(eidFront|eidBack|passport)$/);
+  if (m) return { doc_type: _docTypeFromIdSlot(m[2]), person_role: 'signatory', person_index: parseInt(m[1], 10) };
+
+  // externalSignatoryIdDoc.eidFront / eidBack / passport
+  m = path.match(/^externalSignatoryIdDoc\.(eidFront|eidBack|passport)$/);
+  if (m) return { doc_type: _docTypeFromIdSlot(m[1]), person_role: 'external_signatory', person_index: 0 };
+
+  // entityShTLs[N]
+  m = path.match(/^entityShTLs\[(\d+)\]$/);
+  if (m) return { doc_type: 'entityShareholderTradeLicense', person_role: 'entity_shareholder', person_index: parseInt(m[1], 10) };
+
+  // authoriser.* — authoriser is a single person, no index
+  m = path.match(/^authoriser\.(eidFrontDoc|eidBackDoc|passportDoc)$/);
+  if (m) {
+    const slot = m[1].replace('Doc', '');                 // 'eidFront' | 'eidBack' | 'passport'
+    return { doc_type: _docTypeFromIdSlot(slot), person_role: 'authoriser', person_index: null };
+  }
+
+  // Top-level company docs
+  const simpleMap = {
+    tlDoc:               'tradeLicense',
+    vatCertDoc:          'vatCertificate',
+    vatReturnDoc:        'vatReturn',
+    tenancyContractDoc:  'tenancyContract',
+    moaDoc:              'memorandumOfAssociation',
+    aoaDoc:              'articlesOfAssociation',
+    shareCertDoc:        'shareCertificate',
+    boardResolutionDoc:  'boardResolution',
+    mohreDoc:            'mohreEmployeeList',
+    poaDoc:              'powerOfAttorney',
+    additionalDocs:      'additional',
+    fatcaW8W9Doc:        'fatcaForm',
+  };
+  if (simpleMap[path]) return { doc_type: simpleMap[path], person_role: null, person_index: null };
+
+  // Fallback — unknown slot. Still uploadable; ops can sort out from doc_slot_key.
+  return { doc_type: 'unknown', person_role: null, person_index: null };
+}
+
+function _docTypeFromIdSlot(slot) {
+  if (slot === 'eidFront') return 'emiratesIdFront';
+  if (slot === 'eidBack')  return 'emiratesIdBack';
+  if (slot === 'passport') return 'passport';
+  return 'unknown';
+}
+
+/* At submit time we wait briefly for any in-flight uploads to finish.
+   Returns true if all uploads are done; false if any failed or still
+   pending after the timeout. */
+async function awaitPendingUploads(maxWaitMs) {
+  const deadline = Date.now() + (maxWaitMs || 10000);
+  while (Date.now() < deadline) {
+    const allFiles = collectAllFileSlots(S);
+    const pending = allFiles.filter(f => f.uploadStatus === 'uploading');
+    if (pending.length === 0) return true;
+    await new Promise(r => setTimeout(r, 500));
+  }
+  return false;
+}
+
+/* Walk the state tree and collect every {name, type, uploadStatus, ...}
+   object — these are file slots. Used by awaitPendingUploads(). */
+function collectAllFileSlots(node, out) {
+  out = out || [];
+  if (node && typeof node === 'object') {
+    // Detect a file object: has name + size + type + uploadStatus
+    if (typeof node.name === 'string' && typeof node.size === 'number' &&
+        typeof node.type === 'string' && 'uploadStatus' in node) {
+      out.push(node);
+      return out;
+    }
+    if (Array.isArray(node)) {
+      for (const item of node) collectAllFileSlots(item, out);
+    } else {
+      for (const k of Object.keys(node)) collectAllFileSlots(node[k], out);
+    }
+  }
+  return out;
+}
+
+/* Decide which extraction to run based on which path was just uploaded. */
+function triggerExtractionIfNeeded(path) {
+  if (path === 'tlDoc') {
+    extractTradeLicense();
+  } else if (path === 'authoriser.eidFrontDoc' || path === 'authoriser.eidBackDoc') {
+    // Wait for both sides if we know we'll get both; extract front as soon as it lands.
+    if (S.authoriser.eidFrontDoc) extractEID();
+  } else if (path === 'authoriser.passportDoc') {
+    extractPassport();
+  } else if (path === 'vatCertDoc') {
+    extractVATCert();
+  } else if (path === 'tenancyContractDoc') {
+    extractTenancy();
+  }
+  // For shareholder / signatory IDs we keep extraction manual (out of scope for v5;
+  // ops reads those documents). Multi-shareholder OCR is deferred.
+}
+
+/* ============================================================
+   PAGES
+   ============================================================ */
+
+/* ---------- P1: Business & Contact ---------- */
+function p1() {
+  const otp = otpBlock();
+  // When OTP has been sent (or verified), lock the contact fields so the
+  // codes they receive remain valid. Editing requires "Change details" link.
+  const locked = S._otpSent ? 'disabled' : '';
+  return `
+${pageHead(1, "Let's get started", "Tell us about your business and how to reach you.")}
+${resumeBanner()}
+<div class="section">
+  <h2>Your Business</h2>
+  <div class="field">
+    <label>Business / Company Name <span class="req">*</span></label>
+    <input type="text" value="${esc(S.businessName)}" ${b('businessName')} placeholder="As it appears on your Trade License" ${locked}>
+  </div>
+</div>
+
+<div class="section">
+  <h2>How to Reach You</h2>
+  <p class="intro">We'll send your reference number and CIF details to this email.</p>
+  <div class="field">
+    <label>Your Full Name <span class="req">*</span></label>
+    <input type="text" value="${esc(S.applicantName)}" ${b('applicantName')} placeholder="As per your Emirates ID or Passport" ${locked}>
+  </div>
+  <div class="field-row">
+    <div class="field">
+      <label>Email Address <span class="req">*</span></label>
+      <input type="email" value="${esc(S.email)}" ${b('email')} placeholder="you@example.com" ${locked}>
+    </div>
+    <div class="field">
+      <label>Mobile Number <span class="req">*</span></label>
+      <div class="mobile-uae-wrap" style="display:flex;align-items:stretch;border:1px solid #d6cdb6;border-radius:6px;overflow:hidden;background:#fff;${locked ? 'opacity:0.6;' : ''}">
+        <span class="mobile-prefix" style="display:flex;align-items:center;padding:0 14px;background:#f7f1e3;color:#7a6438;font-weight:600;border-right:1px solid #d6cdb6;font-size:15px;letter-spacing:0.5px">+971</span>
+        <input type="tel" inputmode="numeric" maxlength="10"
+               value="${esc(S.mobile)}"
+               oninput="setMobileInput(this)"
+               placeholder="501234567"
+               style="flex:1;border:0;padding:10px 12px;font-size:15px;outline:none;letter-spacing:1px;background:transparent"
+               ${locked}>
+      </div>
+      <div class="hint" style="margin-top:6px;color:#7a7a7a;font-size:12px">9 digits, starting with 5 (e.g. 501234567).</div>
+    </div>
+  </div>
+</div>
+
+${otp}
+`;
+}
+
+/* ---------- OTP block (rendered inside Page 1) ---------- */
+function otpBlock() {
+  // Three states:
+  //   (a) codes not yet sent → button to send (disabled until fields valid)
+  //   (b) codes sent, not yet verified → two input boxes + verify button
+  //   (c) verified → green confirmation. (Page advances automatically on
+  //        success, so users typically don't sit on this state long, but
+  //        if they navigate back from Page 2 they should see the state.)
+
+  if (S._otpVerified) {
+    return `
+<div class="section" style="background:#f0f7f0;border:1px solid #c5dfb0;border-radius:8px;padding:16px 20px">
+  <div style="color:#3d6a1f;font-weight:600">✓ Verified</div>
+  <div style="color:#5a5a5a;font-size:13px;margin-top:4px">
+    Your mobile has been verified.
+    ${S._refNumber ? `Reference: <strong>${esc(S._refNumber)}</strong>` : ''}
+  </div>
+</div>`;
+  }
+
+  if (!S._otpSent) {
+    const canSend = canRequestOtp();
+    return `
+<div class="section">
+  <h2>Verify Your Mobile</h2>
+  <p class="intro">We'll send a 4-digit verification code to your mobile. Enter it on the next step to continue.</p>
+  ${S._otpError ? `<div class="validation-msg" style="margin-bottom:12px">${esc(S._otpError)}</div>` : ''}
+  <button id="otpSendBtn" class="btn btn-primary" onclick="otpSend()" ${(!canSend || S._otpSending) ? 'disabled' : ''}>
+    ${S._otpSending ? 'Sending…' : 'Send verification code'}
+  </button>
+  <div id="otpSendHint" class="hint" style="margin-top:8px;color:#7a7a7a;font-size:13px;${canSend ? 'display:none' : ''}">Fill in all the fields above first.</div>
+</div>`;
+  }
+
+  // _otpSent && !_otpVerified
+  const cooldown = S._otpResendCooldown;
+  return `
+<div class="section">
+  <h2>Enter the Code We Sent</h2>
+  <p class="intro">A 4-digit code has been sent to <strong>${esc(displayUaeMobile(S.mobile))}</strong>. Enter it below to continue.</p>
+  ${S._otpError ? `<div class="validation-msg" style="margin-bottom:12px">${esc(S._otpError)}</div>` : ''}
+
+  <div class="field" style="max-width:240px">
+    <label>Verification Code <span class="req">*</span></label>
+    <input type="text" inputmode="numeric" maxlength="4" autocomplete="one-time-code"
+           value="${esc(S._otpCodeSms)}"
+           oninput="S._otpCodeSms=this.value.replace(/\\D/g,'').slice(0,4)"
+           placeholder="4 digits"
+           style="font-size:22px;letter-spacing:8px;font-family:monospace;text-align:center">
+  </div>
+
+  <button class="btn btn-primary" onclick="otpVerifyAndContinue()" ${S._otpVerifying ? 'disabled' : ''}>
+    ${S._otpVerifying ? 'Verifying…' : 'Verify & Continue'}
+  </button>
+
+  <div style="margin-top:16px;font-size:13px;color:#7a7a7a">
+    Didn't receive the code?
+    <span id="otpResendArea">${cooldown > 0
+      ? `<span style="color:#aaa">Resend in ${cooldown}s</span>`
+      : `<a href="#" onclick="event.preventDefault();otpSend()" style="color:#8a6e3a;font-weight:600">Resend codes</a>`
+    }</span>
+    &nbsp;·&nbsp;
+    <a href="#" onclick="event.preventDefault();otpChangeDetails()" style="color:#8a6e3a;font-weight:600">Change details</a>
+  </div>
+</div>`;
+}
+
+function canRequestOtp() {
+  return !!(
+    S.businessName.trim() &&
+    S.applicantName.trim() &&
+    S.email.trim() &&
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(S.email.trim()) &&
+    isValidUaeMobile(S.mobile)
+  );
+}
+
+/* ============================================================
+   UAE MOBILE FORMAT — Page 1 applicant mobile
+   ============================================================
+   We accept only UAE mobile numbers on Page 1 (the applicant is a
+   UAE resident by definition — that's the customer Mawarid is taking on).
+   The authoriser may be a foreigner, so authoriser.mobile elsewhere is
+   not subject to this rule.
+
+   Storage:  S.mobile stores the 9-digit local part only (e.g. "501234567").
+   On the wire to backend, we prepend "+971-" → "+971-501234567" (LSQ format).
+   ============================================================ */
+
+function setMobileInput(el) {
+  // Strip everything that isn't a digit
+  let v = el.value.replace(/\D/g, '');
+  // If they pasted "0501234567" or "971501234567", drop the leading prefix
+  if (v.startsWith('971')) v = v.slice(3);
+  if (v.startsWith('0')) v = v.slice(1);
+  // Cap at 9 digits
+  v = v.slice(0, 9);
+  S.mobile = v;
+  // Reflect the cleaned value back into the field
+  if (el.value !== v) el.value = v;
+  // Refresh the OTP button state (live; same pattern as the other fields)
+  updateOtpSendButtonState();
+}
+
+function isValidUaeMobile(s) {
+  return /^5\d{8}$/.test((s || '').trim());
+}
+
+function fullMobileForWire(s) {
+  // Produce the LSQ format. Returns null if input isn't valid.
+  return isValidUaeMobile(s) ? `+971-${s.trim()}` : null;
+}
+
+function displayUaeMobile(s) {
+  // Pretty-print: "501234567" → "+971 50 123 4567"
+  if (!isValidUaeMobile(s)) return s || '';
+  return `+971 ${s.slice(0,2)} ${s.slice(2,5)} ${s.slice(5)}`;
+}
+
+// Called by the input listener on Page 1 contact fields. Toggles the
+// "Send verification code" button enabled state in place — no re-render,
+// so the field the user is typing in keeps its focus.
+function updateOtpSendButtonState() {
+  const btn  = document.getElementById('otpSendBtn');
+  const hint = document.getElementById('otpSendHint');
+  if (!btn) return;
+  const ok = canRequestOtp();
+  btn.disabled = !ok || S._otpSending;
+  if (hint) hint.style.display = ok ? 'none' : '';
+}
+
+/* ---------- P2: About your Business ---------- */
+function p2() {
+  const sole = isSoleOwnerFlow();
+  const multi = isMultiFlow();
+  const tlExtracted = !!(S.tlDoc && (S.tl.licenseNumber || S.tl.companyNameEn || S.tl.legalType));
+  // Show the fields section as soon as a TL is uploaded — even if extraction didn't return data.
+  // This way, customers can always proceed by filling in fields manually.
+  const showTlFields = !!(S.tlDoc && !S._tlExtracting);
+
+  return `
+${pageHead(2, 'About your Business', "Upload your Trade License — we'll read the key details automatically where possible.")}
+
+<div class="section">
+  <h2>Trade License <span class="req">*</span></h2>
+  <p class="intro">A clear scan or photo of your current Trade License (PDF, JPG, or PNG; up to 10 MB).</p>
+  ${fileUpload('tlDoc', 'Drop your Trade License here or tap to upload', 'PDF, JPG, or PNG · Max 10 MB', '📄')}
+  ${S._tlExtracting ? `<div class="ocr-status extracting"><div class="ocr-spinner"></div> Reading your Trade License…</div>` : ''}
+  ${tlExtracted && !S._tlExtracting ? `<div class="ocr-status success">✓ Trade License read successfully. Please review and confirm the extracted details below.</div>` : ''}
+</div>
+
+${showTlFields ? `
+<div class="section">
+  <h2>Trade License Details</h2>
+  <p class="intro">${tlExtracted ? "We've read these from your Trade License. Amber-tinted fields were extracted — please review and confirm. Pale-yellow fields are still required." : "Please fill in the details from your Trade License. Pale-yellow fields are required."}</p>
+
+  ${sectionReviewBanner('tl.', 'Trade License')}
+
+  <div class="field-row">
+    <div class="field ${fieldClass('tl.companyNameEn', S.tl.companyNameEn, true)}">
+      <label>Company Name (English) <span class="req">*</span></label>
+      <input type="text" value="${esc(S.tl.companyNameEn)}" ${bn('tl.companyNameEn')} placeholder="As on Trade License">
+    </div>
+    <div class="field ${fieldClass('tl.licenseNumber', S.tl.licenseNumber, true)}">
+      <label>Trade License Number <span class="req">*</span></label>
+      <input type="text" value="${esc(S.tl.licenseNumber)}" ${bn('tl.licenseNumber')}>
+    </div>
+  </div>
+
+  <div class="field-row">
+    <div class="field ${fieldClass('tl.issueDate', S.tl.issueDate, false)}">
+      <label>Issue Date</label>
+      <input type="date" value="${esc(S.tl.issueDate)}" ${bn('tl.issueDate')}>
+      ${S.tl.issueDate ? `<div class="help" style="margin-top:4px">${esc(formatDateDisplay(S.tl.issueDate))}</div>` : ''}
+    </div>
+    <div class="field ${fieldClass('tl.expiryDate', S.tl.expiryDate, true)}">
+      <label>Expiry Date <span class="req">*</span></label>
+      <input type="date" value="${esc(S.tl.expiryDate)}" ${bn('tl.expiryDate')}>
+      ${S.tl.expiryDate ? `<div class="help" style="margin-top:4px">${esc(formatDateDisplay(S.tl.expiryDate))}${isExpiredDate(S.tl.expiryDate) ? ' <span style="color:#a02828;font-weight:600">(expired)</span>' : ''}</div>` : ''}
+    </div>
+  </div>
+
+  <div class="field-row">
+    <div class="field ${fieldClass('tl.emirate', S.tl.emirate, false)}">
+      <label>Emirate</label>
+      <select ${bseln('tl.emirate')}>${lovOptions('emirate', S.tl.emirate, true, 'Select emirate...')}</select>
+    </div>
+    <div class="field ${fieldClass('tl.legalType', S.tl.legalType, true)}">
+      <label>Legal Type <span class="req">*</span></label>
+      <select ${bseln('tl.legalType')}>${lovOptions('legal_type', S.tl.legalType, true, 'Select legal type...')}</select>
+      ${S.tl.legalTypeRaw ? `<div class="help" style="margin-top:4px">From your Trade License: <em>${esc(S.tl.legalTypeRaw)}</em></div>` : ''}
+    </div>
+  </div>
+
+  <div class="field ${fieldClass('tl.tradeName', S.tl.tradeName, false)}">
+    <label>Trade Name (if different from Company Name)</label>
+    <input type="text" value="${esc(S.tl.tradeName)}" ${bn('tl.tradeName')}>
+  </div>
+
+  ${S.tl.activitiesText ? `
+  <div class="field ${fieldClass('tl.activitiesText', S.tl.activitiesText, false)}">
+    <label>Business Activities</label>
+    <textarea ${bn('tl.activitiesText')} rows="3">${esc(S.tl.activitiesText)}</textarea>
+  </div>` : ''}
+</div>` : ''}
+
+<div class="section">
+  <h2>Business Structure <span class="req">*</span></h2>
+  ${tlExtracted && S.tl.legalType ? `<p class="intro">Based on your Trade License, we've categorised your business as <strong>${esc(lovLabel('legal_type', S.tl.legalType))}</strong>. Confirm the structure below.</p>` : ''}
+  <div class="field">
+    <label>Which best describes your business?</label>
+    <div class="radio-group">
+      <label class="${sel('', S.structureType==='sole_owner')}">
+        <input type="radio" name="struct" ${S.structureType==='sole_owner'?'checked':''} ${brad('structureType','sole_owner')}>
+        <span><strong>Sole owner / single-person company</strong> — one individual owns the entire business (e.g., Sole Establishment, Sole Proprietorship, FZE, OPC, single-shareholder LLC)</span>
+      </label>
+      <label class="${sel('', S.structureType==='multi')}">
+        <input type="radio" name="struct" ${S.structureType==='multi'?'checked':''} ${brad('structureType','multi')}>
+        <span><strong>Multiple shareholders or a board</strong> — two or more shareholders, or an incorporated entity with a board (e.g., LLC, JSC, Partnership, Civil Company)</span>
+      </label>
+    </div>
+  </div>
+  ${(() => {
+    // Soft warning when legal type and structure are inconsistent — doesn't block
+    if (!S.tl.legalType || !S.structureType) return '';
+    const soleSet = ['sole_proprietorship','opc','llc_single','fze'];
+    const multiSet = ['llc_multi','civil_company','partnership','pjsc','private_jsc','fz_co','branch'];
+    const llt = lovLabel('legal_type', S.tl.legalType);
+    const isSoleLegal = soleSet.includes(S.tl.legalType);
+    const isMultiLegal = multiSet.includes(S.tl.legalType);
+    if (isSoleLegal && S.structureType === 'multi') {
+      return `<div class="ocr-status error" style="margin-top:14px"><strong>Heads up:</strong> Your Trade License describes the business as <em>${esc(llt)}</em>, which is typically owned by one person. You've selected "Multiple shareholders or a board" instead. Please double-check that this is what you meant — if it isn't, change one of the answers above. You can still proceed.</div>`;
+    }
+    if (isMultiLegal && S.structureType === 'sole_owner') {
+      return `<div class="ocr-status error" style="margin-top:14px"><strong>Heads up:</strong> Your Trade License describes the business as <em>${esc(llt)}</em>, which usually has multiple shareholders or a board. You've selected "Sole owner" instead. Please double-check that this is what you meant — if it isn't, change one of the answers above. You can still proceed.</div>`;
+    }
+    return '';
+  })()}
+</div>
+
+${sole ? `
+<div class="section">
+  <h2>Authorised Signatory <span class="req">*</span></h2>
+  <div class="field">
+    <label>Are you the authorised signatory for this business?</label>
+    <div class="help" style="margin-bottom:6px">The authorised signatory is the person legally empowered to enter into binding agreements on behalf of your business — for example, signing finance contracts, issuing payment instructions, or operating accounts with us.</div>
+    <div class="radio-group">
+      <label class="${sel('', S.ownerIsSignatory==='yes')}"><input type="radio" name="ois" ${S.ownerIsSignatory==='yes'?'checked':''} ${brad('ownerIsSignatory','yes')}> Yes — I will sign</label>
+      <label class="${sel('', S.ownerIsSignatory==='no')}"><input type="radio" name="ois" ${S.ownerIsSignatory==='no'?'checked':''} ${brad('ownerIsSignatory','no')}> No — someone else will sign</label>
+    </div>
+    ${S.ownerIsSignatory==='no' ? `<div class="help" style="margin-top:8px">We'll ask for that person's details and a Power of Attorney on the next page.</div>` : ''}
+  </div>
+</div>` : ''}
+
+${multi ? `
+<div class="section">
+  <h2>Shareholders &amp; Signatories <span class="req">*</span></h2>
+  <div class="field">
+    <label>How many shareholders does the business have?</label>
+    <select ${bsel('shareholderCount')}>
+      <option value="">Select...</option>
+      ${['2','3','4'].map(n => `<option value="${n}" ${S.shareholderCount===n?'selected':''}>${n}</option>`).join('')}
+      <option value="more" ${S.shareholderCount==='more'?'selected':''}>5 or more</option>
+    </select>
+    <div class="help" style="margin-top:6px">If you have 5 or more shareholders, we'll only need details for the four largest.</div>
+    ${S.shareholderCount==='more' ? `
+    <div style="margin-top:12px;background:#fff3e0;border-left:4px solid #d4901c;border-radius:4px;padding:12px 16px;color:#5a4a2a;font-size:14px;line-height:1.5">
+      <strong>You'll be asked about your top 4 shareholders</strong> — by shareholding percentage, largest first.
+      Remaining shareholders will be summarised by our team during compliance review based on your Memorandum of Association.
+    </div>` : ''}
+  </div>
+  ${S.shareholderCount ? `
+  <div class="field">
+    <label>Are any shareholders companies (i.e., not individuals)?</label>
+    <div class="radio-group">
+      <label class="${sel('', S.hasEntityShareholders==='no')}"><input type="radio" name="hes" ${S.hasEntityShareholders==='no'?'checked':''} ${brad('hasEntityShareholders','no')}> No — all individuals</label>
+      <label class="${sel('', S.hasEntityShareholders==='yes')}"><input type="radio" name="hes" ${S.hasEntityShareholders==='yes'?'checked':''} ${brad('hasEntityShareholders','yes')}> Yes — at least one is a company</label>
+    </div>
+  </div>` : ''}
+  <div class="field">
+    <label>How many authorised signatories?</label>
+    <div class="help" style="margin-bottom:6px">A signatory can be a shareholder or a separate person (e.g., a Manager or POA holder).</div>
+    <select ${bsel('signatoryCount')}>
+      ${['1','2','3','4'].map(n => `<option value="${n}" ${S.signatoryCount===n?'selected':''}>${n}</option>`).join('')}
+    </select>
+  </div>
+</div>` : ''}
+
+${S.structureType ? `
+<div class="section">
+  <h2>Employees</h2>
+  <div class="field">
+    <label>Are any employees on your MOHRE establishment card? <span class="req">*</span></label>
+    <div class="help" style="margin-bottom:6px">MOHRE (Ministry of Human Resources and Emiratisation) covers mainland UAE employees. If you have no employees yet, or your company is a free zone entity (free zones use their own labour systems, not MOHRE), answer <strong>No</strong>. If yes, we'll ask for a copy of your MOHRE Employee List on the documents page.</div>
+    <div class="radio-group">
+      <label class="${sel('', S.hasEmployees==='yes')}"><input type="radio" name="emp" ${S.hasEmployees==='yes'?'checked':''} ${brad('hasEmployees','yes')}> Yes</label>
+      <label class="${sel('', S.hasEmployees==='no')}"><input type="radio" name="emp" ${S.hasEmployees==='no'?'checked':''} ${brad('hasEmployees','no')}> No</label>
+    </div>
+  </div>
+</div>` : ''}`;
+}
+
+/* ---------- Reusable block: "Are you the authoriser?" question ----------
+   Asked early on Page 3 in both modes. If "no", we still collect the
+   applicant's identity on the same page (since we have nothing else to
+   collect), but the submitted application gets a system comment so ops
+   knows to handle the authoriser separately.
+
+   Returns an HTML string. */
+function applicantIsAuthoriserBlock() {
+  const y = S.applicantIsAuthoriser === 'yes';
+  const n = S.applicantIsAuthoriser === 'no';
+  return `
+<div class="section">
+  <h2>Are you the authoriser? <span class="req">*</span></h2>
+  <p class="intro">The authoriser is the person who will legally represent this business in dealings with Mawarid Finance — typically the owner, a director, or someone with a formal Power of Attorney.</p>
+  <div class="field">
+    <div class="radio-group">
+      <label class="${sel('', y)}"><input type="radio" name="aia" ${y?'checked':''} ${brad('applicantIsAuthoriser','yes')}> Yes — I am the authoriser for this business</label>
+      <label class="${sel('', n)}"><input type="radio" name="aia" ${n?'checked':''} ${brad('applicantIsAuthoriser','no')}> No — I'm filling this form, but someone else is the authoriser</label>
+    </div>
+  </div>
+  ${n ? `<div class="help" style="margin-top:10px;background:#fff3e0;border-left:3px solid #d4901c;padding:10px 14px;border-radius:4px;font-size:13px;color:#5a4a2a">
+    <strong>Note:</strong> We'll still take your details on this page so we know who's submitting. The actual authoriser's details will be collected separately by our team during review.
+  </div>` : ''}
+</div>`;
+}
+
+/* ---------- P3: Owners & Signatories ---------- */
+function p3() {
+  const sole = isSoleOwnerFlow();
+  const multi = isMultiFlow();
+  const shCount = effectiveShareholderCount();
+  const sigCount = effectiveSignatoryCount();
+  const A = S.authoriser;
+  const C = S.corporate;
+
+  // Helper: render an authoriser identity field with review state.
+  // requiredFlag is truthy if the field is required (passed as the human-visible req mark).
+  function authIdField(key, label, type = 'text', requiredFlag = '') {
+    const path = 'authoriser.' + key;
+    const val = A[key] || '';
+    const cls = fieldClass(path, val, !!requiredFlag);
+    const req = requiredFlag ? ' <span class="req">*</span>' : '';
+    // For date inputs, show the parsed value below in DD-MMM-YYYY format
+    // for unambiguous display.
+    const dateEcho = (type === 'date' && val) ? `<div class="help" style="margin-top:4px">${esc(formatDateDisplay(val))}</div>` : '';
+    return `<div class="field ${cls}">
+      <label>${label}${req}</label>
+      <input type="${type}" value="${esc(val)}" ${bn(path)}>
+      ${dateEcho}
+    </div>`;
+  }
+  function authSelectField(key, label, lovName, blankLabel, requiredFlag = '') {
+    const path = 'authoriser.' + key;
+    const val = A[key] || '';
+    const cls = fieldClass(path, val, !!requiredFlag);
+    const req = requiredFlag ? ' <span class="req">*</span>' : '';
+    return `<div class="field ${cls}">
+      <label>${label}${req}</label>
+      <select ${bseln(path)}>${lovOptions(lovName, A[key], true, blankLabel || 'Select...')}</select>
+    </div>`;
+  }
+
+  let html = '';
+
+  /* ----- Reusable inline ID upload block ----- */
+  function idUploadBlock(person, pathPrefix, requiredLabel) {
+    const isUae = person.isUaeResident === 'yes';
+    const reqMark = ' <span class="req">*</span>';
+    if (isUae) {
+      return `
+<div class="field-row" style="margin-top:14px">
+  <div class="field">
+    <label>${requiredLabel ? 'Emirates ID — Front' + reqMark : 'Emirates ID — Front'}</label>
+    ${fileUpload(`${pathPrefix}.eidFront`, 'Upload front side', 'JPG or PNG · Max 10 MB', '🪪')}
+  </div>
+  <div class="field">
+    <label>${requiredLabel ? 'Emirates ID — Back' + reqMark : 'Emirates ID — Back'}</label>
+    ${fileUpload(`${pathPrefix}.eidBack`, 'Upload back side', 'JPG or PNG · Max 10 MB', '🪪')}
+  </div>
+</div>`;
+    }
+    return `
+<div class="field" style="margin-top:14px">
+  <label>${requiredLabel ? 'Passport (Biographical Page)' + reqMark : 'Passport (Biographical Page)'}</label>
+  ${fileUpload(`${pathPrefix}.passport`, 'Upload passport page', 'PDF, JPG, or PNG · Max 10 MB', '📘')}
+</div>`;
+  }
+
+  /* ============ SOLE-OWNER PATH ============ */
+  if (sole) {
+    html += pageHead(3, 'About You', "Now we need a few details about you as the owner. Upload your Emirates ID — we'll read most of the details automatically.");
+
+    // Q: Is the applicant filling the form the owner themselves?
+    html += `
+<div class="section">
+  <h2>Are you the owner of this business? <span class="req">*</span></h2>
+  <div class="field">
+    <div class="radio-group">
+      <label class="${sel('', S.applicantIsOwner==='yes')}"><input type="radio" name="aio" ${S.applicantIsOwner==='yes'?'checked':''} ${brad('applicantIsOwner','yes')}> Yes — I'm the owner</label>
+      <label class="${sel('', S.applicantIsOwner==='no')}"><input type="radio" name="aio" ${S.applicantIsOwner==='no'?'checked':''} ${brad('applicantIsOwner','no')}> No — I'm submitting on the owner's behalf</label>
+    </div>
+  </div>
+</div>` + applicantIsAuthoriserBlock();
+
+    // Auto-pre-fill name from contact info if applicant=owner and authoriser name is empty
+    if (S.applicantIsOwner === 'yes' && !A.firstName && S.applicantName) {
+      const parts = S.applicantName.trim().split(/\s+/);
+      if (parts.length >= 1) A.firstName = parts[0];
+      if (parts.length >= 2) A.lastName = parts.slice(-1)[0];
+      if (parts.length >= 3) A.middleName = parts.slice(1, -1).join(' ');
+    }
+
+    if (S.applicantIsOwner) {
+      // ID upload — drives extraction
+      html += `
+<div class="section">
+  <h2>Your ID</h2>
+  <p class="intro">Upload your Emirates ID (preferred) or Passport. We'll extract the details below automatically.</p>
+  <div class="field-row">
+    <div class="field">
+      <label>Emirates ID — Front</label>
+      ${fileUpload('authoriser.eidFrontDoc', 'Upload front side', 'JPG or PNG · Max 10 MB', '🪪')}
+    </div>
+    <div class="field">
+      <label>Emirates ID — Back</label>
+      ${fileUpload('authoriser.eidBackDoc', 'Upload back side', 'JPG or PNG · Max 10 MB', '🪪')}
+    </div>
+  </div>
+  <div class="field">
+    <label>Passport (optional but useful — gives us father's name and place of birth)</label>
+    ${fileUpload('authoriser.passportDoc', 'Upload passport bio page', 'PDF, JPG, or PNG · Max 10 MB', '📘')}
+  </div>
+  ${S._eidExtracting ? `<div class="ocr-status extracting"><div class="ocr-spinner"></div> Reading your Emirates ID…</div>` : ''}
+  ${S._passportExtracting ? `<div class="ocr-status extracting"><div class="ocr-spinner"></div> Reading your Passport…</div>` : ''}
+</div>
+
+<div class="section">
+  <h2>Identity Details</h2>
+  <p class="intro">${anyUnreviewedFields().some(p=>p.startsWith('authoriser.')) ? "We've extracted these from your ID. Amber-tinted fields were extracted — review and confirm in one click. Pale-yellow fields are still required." : "Please confirm or fill in your identity details below."}</p>
+  ${sectionReviewBanner('authoriser.', 'ID document')}
+  <div class="field-row">
+    ${authIdField('firstName', 'First Name', 'text', true)}
+    ${authIdField('middleName', 'Middle Name')}
+  </div>
+  <div class="field-row">
+    ${authIdField('lastName', 'Last Name', 'text', true)}
+    ${authIdField('fatherName', "Father's Name")}
+  </div>
+  ${A.nameArabic || fieldStatus('authoriser.nameArabic') ? `
+  <div class="field-row">
+    ${authIdField('nameArabic', 'Name (Arabic)')}
+  </div>` : ''}
+  <div class="field-row">
+    ${authIdField('dob', 'Date of Birth', 'date', true)}
+    ${authSelectField('gender', 'Gender', 'gender', 'Select...', true)}
+  </div>
+  <div class="field-row">
+    ${authSelectField('nationality', 'Nationality', 'country', 'Select...', true)}
+    ${authSelectField('countryOfBirth', 'Country of Birth', 'country', 'Select...')}
+  </div>
+  <div class="field-row">
+    ${authIdField('placeOfBirth', 'Place of Birth (City)')}
+    ${authSelectField('countryOfResidence', 'Country of Residence', 'country', 'Select...', true)}
+  </div>
+  <div class="field-row">
+    ${authSelectField('salutation', 'Salutation', 'salutation', 'Select...')}
+    ${authSelectField('maritalStatus', 'Marital Status', 'marital_status', 'Select...')}
+  </div>
+</div>
+
+<div class="section">
+  <h2>ID Information</h2>
+  <div class="field-row">
+    ${authIdField('eidNumber', 'Emirates ID Number')}
+    ${authIdField('eidExpiryDate', 'EID Expiry Date', 'date')}
+  </div>
+  ${A.passportNumber || fieldStatus('authoriser.passportNumber') ? `
+  <div class="field-row">
+    ${authIdField('passportNumber', 'Passport Number')}
+    ${authIdField('passportExpiryDate', 'Passport Expiry Date', 'date')}
+  </div>
+  <div class="field-row">
+    ${authSelectField('passportIssuanceCountry', 'Passport Issued In', 'country', 'Select...')}
+    ${authIdField('passportIssuanceDate', 'Passport Issuance Date', 'date')}
+  </div>` : ''}
+</div>
+
+<div class="section">
+  <h2>Address</h2>
+  <p class="intro">Where you live (residential address). Pale-yellow fields are required.</p>
+  <div class="field">
+    <label>Address Type</label>
+    <select ${bseln('authoriser.addressType')}>${lovOptions('address_type_retail', A.addressType, false)}</select>
+  </div>
+  <div class="field-row">
+    <div class="field ${fieldClass('authoriser.buildingName', A.buildingName, false)}"><label>Building Name / Number</label><input type="text" value="${esc(A.buildingName)}" ${bn('authoriser.buildingName')}></div>
+    <div class="field ${fieldClass('authoriser.street', A.street, true)}"><label>Street / Neighborhood <span class="req">*</span></label><input type="text" value="${esc(A.street)}" ${bn('authoriser.street')}></div>
+  </div>
+  <div class="field-row">
+    <div class="field ${fieldClass('authoriser.area', A.area, true)}"><label>Area / Region <span class="req">*</span></label><input type="text" value="${esc(A.area)}" ${bn('authoriser.area')}></div>
+    <div class="field ${fieldClass('authoriser.city', A.city, true)}"><label>City / Province <span class="req">*</span></label><input type="text" value="${esc(A.city)}" ${bn('authoriser.city')}></div>
+  </div>
+  <div class="field-row">
+    <div class="field ${fieldClass('authoriser.emirate', A.emirate, true)}"><label>Emirate <span class="req">*</span></label><select ${bseln('authoriser.emirate')}>${lovOptions('emirate', A.emirate, true, 'Select emirate...')}</select></div>
+    <div class="field"><label>P.O. Box</label><input type="text" value="${esc(A.poBox)}" ${bn('authoriser.poBox')}></div>
+  </div>
+  <div class="field-row">
+    <div class="field"><label>Country <span class="req">*</span></label><select ${bseln('authoriser.addressCountry')}>${lovOptions('country', A.addressCountry, false)}</select></div>
+    <div class="field"><label>Residence Type</label><select ${bseln('authoriser.residenceType')}>${lovOptions('residence_type', A.residenceType, true, 'Select...')}</select></div>
+  </div>
+  <div class="field"><label>Office Phone (optional)</label><input type="tel" value="${esc(A.officePhone)}" ${bn('authoriser.officePhone')}></div>
+</div>
+
+<div class="section">
+  <h2>Tax</h2>
+  <div class="field">
+    <label>Are you subject to UAE corporate or personal tax? <span class="req">*</span></label>
+    <div class="radio-group">
+      <label class="${sel('', A.taxYN==='no')}"><input type="radio" name="atax" ${A.taxYN==='no'?'checked':''} onchange="S.authoriser.taxYN='no';render(true)"> No</label>
+      <label class="${sel('', A.taxYN==='yes')}"><input type="radio" name="atax" ${A.taxYN==='yes'?'checked':''} onchange="S.authoriser.taxYN='yes';render(true)"> Yes</label>
+    </div>
+  </div>
+  ${A.taxYN === 'yes' ? `
+  <div class="field"><label>Tax Number / TIN</label><input type="text" value="${esc(A.taxNumber)}" ${bn('authoriser.taxNumber')}></div>` : ''}
+</div>
+
+<div class="section">
+  <h2>Profession &amp; Income</h2>
+  <div class="field-row">
+    <div class="field ${fieldClass('authoriser.occupation', A.occupation, true)}"><label>Occupation <span class="req">*</span></label><select ${bseln('authoriser.occupation')}>${lovOptions('occupation', A.occupation, false)}</select></div>
+    <div class="field ${fieldClass('authoriser.jobTitle', A.jobTitle, true)}"><label>Job Title <span class="req">*</span></label><input type="text" value="${esc(A.jobTitle)}" ${bn('authoriser.jobTitle')} placeholder="e.g., Founder, Owner"></div>
+  </div>
+  <div class="field-row">
+    <div class="field"><label>Activity Status</label><select ${bseln('authoriser.activityStatus')}>${lovOptions('activity_status', A.activityStatus, false)}</select></div>
+    <div class="field ${fieldClass('authoriser.economicSector', A.economicSector, true)}"><label>Economic Sector <span class="req">*</span></label><select ${bseln('authoriser.economicSector')}>${lovOptions('economic_sector', A.economicSector, true, 'Select sector...')}</select></div>
+  </div>
+  <div class="field ${emptyRequiredClass(A.sourceOfIncome, true)}">
+    <label>Source of Income <span class="req">*</span></label>
+    <div class="help" style="margin-bottom:6px">Select all that apply.</div>
+    ${multiSelectLov('source_of_income', 'authoriser.sourceOfIncome', 'authoriser.sourceOfIncomeOther')}
+  </div>
+  <div class="field-row">
+    <div class="field"><label>Income Currency</label><select ${bseln('authoriser.incomeCurrency')}>${lovOptions('currency', A.incomeCurrency, false)}</select></div>
+    <div class="field"><label>Approximate Monthly Income (AED equivalent)</label><input type="number" value="${esc(A.monthlySalary)}" ${bn('authoriser.monthlySalary')} min="0"></div>
+  </div>
+</div>
+
+<div class="section">
+  <h2>Politically Exposed Person (PEP)</h2>
+  <p class="intro">A PEP is someone who holds (or has held) a prominent public position — for example, a head of state, senior politician, judge, military officer, or senior executive of a state-owned enterprise. This also includes close family members and associates of such a person.</p>
+  <div class="field ${fieldClass('authoriser.isPep', A.isPep, true)}">
+    <label>Are you a PEP, or a close family member or associate of one? <span class="req">*</span></label>
+    <select ${bseln('authoriser.isPep')}>${lovOptions('is_pep', A.isPep, true, 'Select...')}</select>
+  </div>
+  ${A.isPep && A.isPep !== 'no' ? `
+  <div class="field ${emptyRequiredClass(A.pepPositionCountry, true)}"><label>Position &amp; Country <span class="req">*</span></label><input type="text" value="${esc(A.pepPositionCountry)}" ${bn('authoriser.pepPositionCountry')} placeholder="e.g., Senior diplomat — France"></div>
+  <div class="field ${emptyRequiredClass(A.pepSourceOfWealthNarrative, true)}"><label>Source of Wealth — please describe <span class="req">*</span></label><textarea ${bn('authoriser.pepSourceOfWealthNarrative')} rows="3" placeholder="Briefly describe how the wealth was accumulated">${esc(A.pepSourceOfWealthNarrative)}</textarea></div>
+  ` : ''}
+</div>
+
+<div class="section">
+  <h2>Source of Wealth</h2>
+  <div class="field ${emptyRequiredClass(A.sourceOfWealth, true)}">
+    <label>How did you accumulate your wealth? <span class="req">*</span></label>
+    <div class="help" style="margin-bottom:6px">Select all that apply.</div>
+    ${multiSelectLov('source_of_wealth', 'authoriser.sourceOfWealth', 'authoriser.sourceOfWealthOther')}
+  </div>
+</div>
+
+<div class="section">
+  <h2>Sanctions / Regulatory</h2>
+  <div class="field">
+    <label>Have you been subject to financial sanctions, regulatory action, or criminal proceedings? <span class="req">*</span></label>
+    <div class="radio-group">
+      <label class="${sel('', A.sanctions==='no')}"><input type="radio" name="asanc" ${A.sanctions==='no'?'checked':''} onchange="S.authoriser.sanctions='no';render(true)"> No</label>
+      <label class="${sel('', A.sanctions==='yes')}"><input type="radio" name="asanc" ${A.sanctions==='yes'?'checked':''} onchange="S.authoriser.sanctions='yes';render(true)"> Yes</label>
+    </div>
+  </div>
+  ${A.sanctions === 'yes' ? `
+  <div class="field"><label>Brief description <span class="req">*</span></label><textarea ${bn('authoriser.sanctionsDescription')} rows="2">${esc(A.sanctionsDescription)}</textarea></div>` : ''}
+</div>
+
+<div class="section">
+  <h2>Account Profile</h2>
+  <div class="field ${emptyRequiredClass(C.estimatedMonthlyTurnover, true)}">
+    <label>Estimated Monthly Turnover of the Account <span class="req">*</span></label>
+    <select ${bseln('corporate.estimatedMonthlyTurnover')}>${lovOptions('estimated_monthly_turnover', C.estimatedMonthlyTurnover, true, 'Select range...')}</select>
+  </div>
+  <div class="field">
+    <label>Annual Expected Turnover</label>
+    <select ${bseln('corporate.annualExpectedTurnover')}>${lovOptions('annual_expected_turnover', C.annualExpectedTurnover, true, 'Select range...')}</select>
+  </div>
+  <div class="field ${emptyRequiredClass(C.purposeOfAccount, true)}">
+    <label>Purpose of the Account <span class="req">*</span></label>
+    <div class="help" style="margin-bottom:6px">Select all that apply.</div>
+    ${multiSelectLov('purpose_of_account', 'corporate.purposeOfAccount', 'corporate.purposeOfAccountOther')}
+  </div>
+  <div class="field">
+    <label>Source of Funds (for the account)</label>
+    <div class="help" style="margin-bottom:6px">Where the money flowing through the account will come from. Defaults from your Source of Income.</div>
+    ${multiSelectLov('source_of_funds', 'corporate.sourceOfFunds', 'corporate.sourceOfFundsOther')}
+  </div>
+</div>`;
+    }
+
+    // External signatory section (when ownerIsSignatory === 'no')
+    if (S.ownerIsSignatory === 'no') {
+      const ext = S.externalSignatory;
+      html += `
+<div class="section">
+  <h2>Authorised Signatory</h2>
+  <p class="intro">The person legally empowered to enter into binding agreements on behalf of your business.</p>
+  <div class="field">
+    <label>Full Name <span class="req">*</span></label>
+    <input type="text" value="${esc(ext.name)}" ${bn('externalSignatory.name')} placeholder="As per Emirates ID or Passport">
+  </div>
+  <div class="field-row">
+    <div class="field">
+      <label>Nationality <span class="req">*</span></label>
+      <select ${bseln('externalSignatory.nationality')}>${lovOptions('country', ext.nationality, true, 'Select...')}</select>
+    </div>
+    <div class="field">
+      <label>UAE Resident? <span class="req">*</span></label>
+      <select ${bseln('externalSignatory.isUaeResident')}>
+        <option value="yes" ${ext.isUaeResident==='yes'?'selected':''}>Yes — has Emirates ID</option>
+        <option value="no" ${ext.isUaeResident==='no'?'selected':''}>No — will upload Passport</option>
+      </select>
+    </div>
+  </div>
+  <div class="field-row">
+    <div class="field"><label>Email</label><input type="email" value="${esc(ext.email)}" ${bn('externalSignatory.email')}></div>
+    <div class="field"><label>Mobile</label><input type="tel" value="${esc(ext.mobile)}" ${bn('externalSignatory.mobile')}></div>
+  </div>
+  <div style="margin-top:6px">
+    <label style="font-size:13px;color:var(--text);font-weight:600">Signatory's ID <span class="req">*</span></label>
+    ${idUploadBlock(ext, 'externalSignatoryIdDoc', true)}
+  </div>
+  <div class="field" style="margin-top:18px">
+    <label>Power of Attorney <span class="req">*</span></label>
+    <div class="help" style="margin-bottom:6px">A signed POA authorising ${esc(ext.name) || 'this person'} to act on behalf of your business.</div>
+    ${fileUpload('poaDoc', 'Upload POA', 'PDF · Max 10 MB', '📄')}
+  </div>
+  <div class="field">
+    <label>Is this person a PEP? <span class="req">*</span></label>
+    <select ${bseln('externalSignatory.isPep')}>${lovOptions('is_pep', ext.isPep, true, 'Select...')}</select>
+  </div>
+</div>`;
+    }
+
+    return html;
+  }
+
+  /* ============ MULTI-SHAREHOLDER PATH ============ */
+  html += pageHead(3, 'About You & Your Shareholders', "Tell us about yourself as the applicant, then list the shareholders and signatories.");
+
+  // Q: Is the applicant filling the form the authoriser?
+  html += applicantIsAuthoriserBlock();
+
+  // Authoriser block (the applicant — they get their own Retail CIF)
+  html += `
+<div class="section">
+  <h2>About You</h2>
+  <p class="intro">A few basics about you as the applicant. Upload your ID — we'll auto-fill the rest.</p>
+  <div class="field-row">
+    <div class="field"><label>Emirates ID — Front</label>${fileUpload('authoriser.eidFrontDoc', 'Upload front', 'JPG / PNG', '🪪')}</div>
+    <div class="field"><label>Emirates ID — Back</label>${fileUpload('authoriser.eidBackDoc', 'Upload back', 'JPG / PNG', '🪪')}</div>
+  </div>
+  ${S._eidExtracting ? `<div class="ocr-status extracting"><div class="ocr-spinner"></div> Reading your Emirates ID…</div>` : ''}
+  ${sectionReviewBanner('authoriser.', 'Emirates ID')}
+  <div class="field-row">
+    ${authIdField('firstName', 'First Name', 'text', true)}
+    ${authIdField('lastName', 'Last Name', 'text', true)}
+  </div>
+  <div class="field-row">
+    ${authSelectField('nationality', 'Nationality', 'country', 'Select...', true)}
+    ${authIdField('dob', 'Date of Birth', 'date', true)}
+  </div>
+  <div class="field">
+    <label>Are you a PEP? <span class="req">*</span></label>
+    <select ${bseln('authoriser.isPep')}>${lovOptions('is_pep', A.isPep, true, 'Select...')}</select>
+  </div>
+</div>`;
+
+  // Shareholders (with inline ID upload for individuals; entity TL for entities)
+  html += `<div class="section"><h2>Shareholders</h2></div>`;
+  for (let i = 0; i < shCount; i++) {
+    const sh = S.shareholders[i];
+    html += `
+<div class="section">
+  <h2>Shareholder ${i+1}</h2>
+  ${S.hasEntityShareholders==='yes' ? `
+  <div class="field">
+    <label>Type <span class="req">*</span></label>
+    <div class="radio-group">
+      <label class="${sel('', sh.isEntity==='no')}"><input type="radio" name="shtype${i}" ${sh.isEntity==='no'?'checked':''} ${bradn(`shareholders[${i}].isEntity`,'no')}> Individual</label>
+      <label class="${sel('', sh.isEntity==='yes')}"><input type="radio" name="shtype${i}" ${sh.isEntity==='yes'?'checked':''} ${bradn(`shareholders[${i}].isEntity`,'yes')}> Company (entity)</label>
+    </div>
+  </div>` : ''}
+  <div class="field-row">
+    <div class="field">
+      <label>${sh.isEntity === 'yes' ? 'Company Name' : 'Full Name'} <span class="req">*</span></label>
+      <input type="text" value="${esc(sh.name)}" ${bn(`shareholders[${i}].name`)} placeholder="${sh.isEntity === 'yes' ? 'Registered company name' : 'Full name'}">
+    </div>
+    <div class="field">
+      <label>Shareholding % <span class="req">*</span></label>
+      <input type="number" value="${esc(sh.pct)}" ${bn(`shareholders[${i}].pct`)} min="0" max="100" placeholder="e.g., 50">
+    </div>
+  </div>
+  ${sh.isEntity === 'yes' ? `
+  <div class="field" style="margin-top:14px">
+    <label>Trade License of ${esc(sh.name) || 'this entity'} <span class="req">*</span></label>
+    ${fileUpload(`entityShTLs[${i}]`, 'Upload Trade License', 'PDF, JPG, or PNG · Max 10 MB', '🏢')}
+  </div>` : `
+  <div class="field-row">
+    <div class="field">
+      <label>Nationality <span class="req">*</span></label>
+      <select ${bseln(`shareholders[${i}].nationality`)}>${lovOptions('country', sh.nationality, true, 'Select...')}</select>
+    </div>
+    <div class="field">
+      <label>UAE Resident? <span class="req">*</span></label>
+      <select ${bseln(`shareholders[${i}].isUaeResident`)}>
+        <option value="yes" ${sh.isUaeResident==='yes'?'selected':''}>Yes — has Emirates ID</option>
+        <option value="no" ${sh.isUaeResident==='no'?'selected':''}>No — will upload Passport</option>
+      </select>
+    </div>
+  </div>
+  <div style="margin-top:6px">
+    <label style="font-size:13px;color:var(--text);font-weight:600">${esc(sh.name) || 'Shareholder ' + (i+1)}'s ID <span class="req">*</span></label>
+    ${idUploadBlock(sh, `shIdDocs[${i}]`, true)}
+  </div>`}
+</div>`;
+  }
+
+  if (S.shareholderCount === 'more') {
+    html += `
+<div class="section">
+  <h2>Additional Shareholders (5 and beyond)</h2>
+  <p class="intro">A brief summary is enough for shareholders below the top four.</p>
+  <div class="field">
+    <label>Names of additional shareholders</label>
+    <textarea ${b('additionalShareholderNames')} placeholder="Comma-separated">${esc(S.additionalShareholderNames)}</textarea>
+  </div>
+  <div class="field">
+    <label>Combined shareholding %</label>
+    <input type="number" value="${esc(S.additionalShareholderPct)}" ${b('additionalShareholderPct')} min="0" max="100">
+  </div>
+</div>`;
+  }
+
+  // Signatories
+  const shOpts = [];
+  for (let i = 0; i < shCount; i++) {
+    const sh = S.shareholders[i];
+    if (sh.isEntity !== 'yes' && sh.name) shOpts.push({ idx: i, name: sh.name });
+  }
+
+  // Section intro — clarifies what "authorised signatory" means before we
+  // start asking about each one.
+  html += `
+<div class="section">
+  <h2>Authorised Signatories</h2>
+  <p class="intro">An authorised signatory is a person legally empowered to sign contracts and bind this business in agreements with Mawarid Finance. Please list each authorised signatory below.</p>
+</div>`;
+
+  let needsPoa = false;
+  for (let i = 0; i < sigCount; i++) {
+    const sig = S.signatories[i];
+    if (sig.mode === 'new') needsPoa = true;
+
+    // Build the dropdown options for THIS signatory by filtering out
+    // shareholders already chosen by OTHER signatories. The currently
+    // selected one (if any) for this signatory stays visible so the
+    // dropdown renders consistently. If a previously selected option
+    // disappears (because another signatory grabbed it), the user has
+    // to pick fresh — that's fine.
+    const takenByOthers = new Set();
+    for (let j = 0; j < sigCount; j++) {
+      if (j === i) continue;
+      const otherSig = S.signatories[j];
+      if (otherSig.mode === 'linked' && otherSig.linkedShIdx !== '') {
+        takenByOthers.add(String(otherSig.linkedShIdx));
+      }
+    }
+    const availableShOpts = shOpts.filter(o => !takenByOthers.has(String(o.idx)));
+
+    html += `
+<div class="section">
+  <h2>Authorised Signatory ${i+1}</h2>
+  <div class="field">
+    <label>Is this authorised signatory one of the shareholders listed above? <span class="req">*</span></label>
+    <div class="radio-group">
+      <label class="${sel('', sig.mode==='linked')}"><input type="radio" name="sigmode${i}" ${sig.mode==='linked'?'checked':''} ${bradn(`signatories[${i}].mode`,'linked')}> Yes — pick from shareholders</label>
+      <label class="${sel('', sig.mode==='new')}"><input type="radio" name="sigmode${i}" ${sig.mode==='new'?'checked':''} ${bradn(`signatories[${i}].mode`,'new')}> No — different person</label>
+    </div>
+  </div>
+  ${sig.mode==='linked' ? `
+  <div class="field">
+    <label>Which shareholder? <span class="req">*</span></label>
+    <select ${bseln(`signatories[${i}].linkedShIdx`)}>
+      <option value="">Select...</option>
+      ${availableShOpts.map(o => `<option value="${o.idx}" ${sig.linkedShIdx===String(o.idx)?'selected':''}>${esc(o.name)} (Shareholder ${o.idx+1})</option>`).join('')}
+    </select>
+    ${availableShOpts.length === 0 ? `<div class="help" style="margin-top:6px;color:var(--warn-text)">${shOpts.length === 0 ? 'No individual shareholders with names entered yet. Either go back and complete shareholder names, or pick "different person" above.' : 'All eligible shareholders are already assigned as signatories above. Pick "different person" if this signatory is someone else.'}</div>` : ''}
+  </div>` : ''}
+  ${sig.mode==='new' ? `
+  <div class="field">
+    <label>Full Name <span class="req">*</span></label>
+    <input type="text" value="${esc(sig.name)}" ${bn(`signatories[${i}].name`)} placeholder="As per Emirates ID or Passport">
+  </div>
+  <div class="field-row">
+    <div class="field">
+      <label>Nationality <span class="req">*</span></label>
+      <select ${bseln(`signatories[${i}].nationality`)}>${lovOptions('country', sig.nationality, true, 'Select...')}</select>
+    </div>
+    <div class="field">
+      <label>UAE Resident? <span class="req">*</span></label>
+      <select ${bseln(`signatories[${i}].isUaeResident`)}>
+        <option value="yes" ${sig.isUaeResident==='yes'?'selected':''}>Yes — has Emirates ID</option>
+        <option value="no" ${sig.isUaeResident==='no'?'selected':''}>No — will upload Passport</option>
+      </select>
+    </div>
+  </div>
+  <div style="margin-top:6px">
+    <label style="font-size:13px;color:var(--text);font-weight:600">${esc(sig.name) || 'Signatory ' + (i+1)}'s ID <span class="req">*</span></label>
+    ${idUploadBlock(sig, `sigIdDocs[${i}]`, true)}
+  </div>` : ''}
+</div>`;
+  }
+
+  if (needsPoa) {
+    html += `
+<div class="section">
+  <h2>Power of Attorney <span class="req">*</span></h2>
+  <p class="intro">A signed POA authorising the non-shareholder signatory(ies) listed above to act on behalf of your business.</p>
+  ${fileUpload('poaDoc', 'Upload POA', 'PDF · Max 10 MB', '📄')}
+</div>`;
+  }
+
+  // UBO acknowledgement.
+  // We deliberately do NOT ask the applicant to make a confident claim about
+  // who the UBOs are. UBO determination requires understanding ownership
+  // chains and "effective control" — concepts applicants often don't know.
+  // Compliance handles UBO identification manually during review based on
+  // MOA, Share Certificate, and follow-up. The applicant just acknowledges
+  // the obligation and commits to providing more info if asked.
+  html += `
+<div class="section" style="border-color:var(--gold-light);background:var(--beige-light)">
+  <h2>Ultimate Beneficial Owner (UBO)</h2>
+  <p class="intro">UAE regulations require Mawarid Finance to identify the Ultimate Beneficial Owners (UBOs) of every business we onboard — the natural person(s) who ultimately own or control the business, whether directly, indirectly through layers, or by other means of effective control.</p>
+  <div class="field">
+    <label style="font-weight:400; display:flex; gap:10px; align-items:flex-start">
+      <input type="checkbox" style="margin-top:4px" ${S.uboConfirmed?'checked':''} ${bchk('uboConfirmed')}>
+      <span>I understand UBO identification is required and I will provide any additional information and documentation about the business's UBOs that Mawarid Finance requests during compliance review. <span class="req">*</span></span>
+    </label>
+  </div>
+</div>`;
+
+  // Account profile (for multi)
+  html += `
+<div class="section">
+  <h2>Account Profile</h2>
+  <div class="field ${emptyRequiredClass(C.estimatedMonthlyTurnover, true)}">
+    <label>Estimated Monthly Turnover of the Account <span class="req">*</span></label>
+    <select ${bseln('corporate.estimatedMonthlyTurnover')}>${lovOptions('estimated_monthly_turnover', C.estimatedMonthlyTurnover, true, 'Select range...')}</select>
+  </div>
+  <div class="field ${emptyRequiredClass(C.purposeOfAccount, true)}">
+    <label>Purpose of the Account <span class="req">*</span></label>
+    ${multiSelectLov('purpose_of_account', 'corporate.purposeOfAccount', 'corporate.purposeOfAccountOther')}
+  </div>
+  <div class="field ${emptyRequiredClass(C.sourceOfFunds, true)}">
+    <label>Source of Funds <span class="req">*</span></label>
+    ${multiSelectLov('source_of_funds', 'corporate.sourceOfFunds', 'corporate.sourceOfFundsOther')}
+  </div>
+</div>`;
+
+  return html;
+}
+
+/* ---------- P4: Business Documents ---------- */
+function p4() {
+  const multi = isMultiFlow();
+  const corpDocsRequired = multi;
+  const boardResRequired = multi;
+
+  let html = `
+${pageHead(4, 'Business Documents', "A few documents about the business itself. Required ones are marked clearly — optional ones help our team move faster.")}
+
+<div class="section">
+  <h2>Trade License${docBadge(true)}</h2>
+  <p class="intro">${S.tlDoc ? '✓ Already uploaded earlier.' : 'Please go back to step 2 to upload your Trade License.'}</p>
+  ${S.tlDoc ? fileUpload('tlDoc', '', '', '📄') : ''}
+</div>
+
+<div class="section">
+  <h2>VAT Registration Certificate${docBadge(true)}</h2>
+  <p class="intro">If you're not VAT-registered, please upload a written confirmation on company letterhead.</p>
+  ${fileUpload('vatCertDoc', 'Drop your VAT certificate here or tap to upload', 'PDF, JPG, or PNG · Max 10 MB', '🧾')}
+</div>
+
+<div class="section">
+  <h2>VAT Return Filings${docBadge(false)}</h2>
+  <p class="intro">Recent VAT returns help our team verify business activity faster, but aren't strictly required.</p>
+  ${fileUpload('vatReturnDoc', 'Upload VAT returns', 'PDF · Max 10 MB', '📊')}
+</div>
+
+<div class="section">
+  <h2>Tenancy Contract${docBadge(true)}</h2>
+  <p class="intro">A current Ejari / tenancy contract for your business address. We'll read the address and expiry date automatically.</p>
+  ${fileUpload('tenancyContractDoc', 'Upload Tenancy Contract', 'PDF, JPG, or PNG · Max 10 MB', '🏠')}
+  ${S._tenancyExtracting ? `<div class="ocr-status extracting"><div class="ocr-spinner"></div> Reading your Tenancy Contract…</div>` : ''}
+  ${S.corporate.tenancyExpiryDate ? `<div class="ocr-status success">✓ Tenancy expiry: ${esc(formatDateDisplay(S.corporate.tenancyExpiryDate))}</div>` : ''}
+</div>`;
+
+  // Corporate documents (multi only)
+  if (corpDocsRequired) {
+    html += `
+<div class="section">
+  <h2>Memorandum of Association (MOA)${docBadge(true)}</h2>
+  ${fileUpload('moaDoc', 'Upload MOA', 'PDF · Max 10 MB', '📜')}
+</div>
+
+<div class="section">
+  <h2>Articles of Association (AOA)${docBadge(true)}</h2>
+  ${fileUpload('aoaDoc', 'Upload AOA', 'PDF · Max 10 MB', '📜')}
+</div>
+
+<div class="section">
+  <h2>Share Certificate${docBadge(true)}</h2>
+  ${fileUpload('shareCertDoc', 'Upload Share Certificate', 'PDF, JPG, or PNG · Max 10 MB', '🎫')}
+</div>`;
+  }
+
+  if (boardResRequired) {
+    html += `
+<div class="section">
+  <h2>Board Resolution${docBadge(true)}</h2>
+  <p class="intro">A resolution from your Board (or sole shareholder, for OPC) authorising your business to open an account with Mawarid Finance, and naming the authorised signatory(ies).</p>
+  ${fileUpload('boardResolutionDoc', 'Upload Board Resolution', 'PDF · Max 10 MB', '📋')}
+</div>`;
+  }
+
+  // MOHRE list
+  if (S.hasEmployees === 'yes') {
+    html += `
+<div class="section">
+  <h2>MOHRE Employee List${docBadge(true)}</h2>
+  <p class="intro">An up-to-date employee list from your MOHRE establishment account — typically downloadable from MOHRE Tasheel or the MOHRE portal.</p>
+  ${fileUpload('mohreDoc', 'Upload MOHRE Employee List', 'PDF · Max 10 MB', '👥')}
+</div>`;
+  }
+
+  // Always-optional additional documents
+  html += `
+<div class="section">
+  <h2>Additional Documents${docBadge(false)}</h2>
+  <p class="intro">Anything else you'd like our team to see — recent bank reference letter, audited financials, business profile, or any other supporting document.</p>
+  ${fileUpload('additionalDocs', 'Upload additional documents', 'PDF, JPG, or PNG · Max 10 MB', '📎')}
+</div>`;
+
+  return html;
+}
+
+/* ---------- P5: Declarations ---------- */
+function p5() {
+  return `
+${pageHead(5, 'Final declarations', "One last check before you submit. Required by UAE regulations.")}
+
+<div class="section">
+  <h2>FATCA — U.S. Tax Status</h2>
+  <p class="intro">FATCA (the U.S. Foreign Account Tax Compliance Act) requires us to identify customers with U.S. tax obligations.</p>
+  <div class="field ${emptyRequiredClass(S.fatcaUSPerson, true)}">
+    <label>Is your business, or any owner with 10% or more shareholding, a U.S. Person for tax purposes (e.g., U.S. citizen, U.S. tax resident, or U.S.-incorporated entity)? <span class="req">*</span></label>
+    <div class="radio-group">
+      <label class="${sel('', S.fatcaUSPerson==='no')}"><input type="radio" name="fatca" ${S.fatcaUSPerson==='no'?'checked':''} ${brad('fatcaUSPerson','no')}> No</label>
+      <label class="${sel('', S.fatcaUSPerson==='yes')}"><input type="radio" name="fatca" ${S.fatcaUSPerson==='yes'?'checked':''} ${brad('fatcaUSPerson','yes')}> Yes</label>
+    </div>
+    ${S.fatcaUSPerson==='yes' ? `<div class="note-box info" style="margin-top:10px">Got it — our compliance team will follow up with the relevant U.S. tax form (W-9 or W-8BEN-E) after you submit. If you already have a signed copy, you can upload it below to save a step.</div>` : ''}
+  </div>
+  ${S.fatcaUSPerson==='yes' ? `
+  <div class="field" style="margin-top:14px">
+    <label>W-9 / W-8BEN-E (optional)</label>
+    <div class="help" style="margin-bottom:6px">If you already have a signed W-9 (for U.S. persons) or W-8BEN-E (for non-U.S. entities with U.S. owners), upload it here. Otherwise our compliance team will send you the right form after submission.</div>
+    ${fileUpload('fatcaW8W9Doc', 'Upload W-9 or W-8BEN-E', 'PDF, JPG, or PNG · Max 10 MB · Optional', '📄')}
+  </div>` : ''}
+</div>
+
+<div class="section" style="border-color:var(--gold-light);background:var(--beige-light)">
+  <h2>Consent &amp; Acknowledgement</h2>
+  <div class="field">
+    <label style="font-weight:400; display:flex; gap:10px; align-items:flex-start">
+      <input type="checkbox" style="margin-top:4px" ${S.consentGiven?'checked':''} ${bchk('consentGiven')}>
+      <span>
+        I confirm that the information I have provided is true and accurate to the best of my knowledge. I authorise Mawarid Finance to process this information and the documents I have uploaded for the purpose of opening a customer account (CIF) and conducting due diligence. I understand that <strong>additional information may be requested</strong> by the Mawarid Finance compliance team, and that <strong>my account will not be available for transactions</strong> until compliance review is complete. <span class="req">*</span>
+      </span>
+    </label>
+  </div>
+</div>
+
+${S._submitError ? `<div class="note-box error" style="margin-top:12px"><strong>Submission failed.</strong> ${esc(S._submitError)} Please try again, or contact us if the problem persists.</div>` : ''}`;
+}
+
+/* ---------- P6: Confirmation ---------- */
+function p6() {
+  return `
+${pageHead(6, 'Application submitted', '')}
+
+<div class="confirm-box">
+  <div class="confirm-icon">✓</div>
+  <h2 style="margin:0 0 8px;font-size:22px">Thanks, ${esc(S.applicantName.split(' ')[0] || 'there')}!</h2>
+  <p style="font-size:15px;color:var(--muted);margin:0 0 22px">Your application has been received and is being processed.</p>
+  <div style="margin:0 auto 22px">
+    <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">Reference Number</div>
+    <div class="ref-num">${esc(_refNum || '— pending —')}</div>
+  </div>
+  <p style="font-size:13px;color:var(--muted);margin:14px auto 0;max-width:420px">Please keep this reference number for any follow-up communication.</p>
+</div>
+
+<div style="text-align:center;margin-top:28px">
+  <button class="btn btn-back" onclick="startOver()" style="min-width:200px">Start a new application</button>
+</div>`;
+}
+
+/* ============================================================
+   NAVIGATION & RENDER
+   ============================================================ */
+function render(preserveScroll) {
+  // Update the mobile step indicator. Cheap; runs on every render.
+  updateMobileBar();
+
+  const nav = document.getElementById('railNav');
+  nav.innerHTML = pages.map(p => {
+    const done = isPageStarted(p.id);
+    const reachable = p.id <= maxReachedPage;
+    const isCurrent = p.id === curPage;
+    const cls = isCurrent ? 'active' : !reachable ? 'locked' : '';
+    return `<li><button class="${cls}" ${reachable ? `onclick="goTo(${p.id})"` : 'disabled'}>
+      <span class="pnum">${String(p.id).padStart(2,'0')}</span><span>${p.title}</span>
+      ${done && reachable ? '<span class="page-check">✓</span>' : ''}
+    </button></li>`;
+  }).join('');
+
+  const scrollY = window.scrollY;
+  const page = pages.find(p => p.id === curPage);
+  let html = '';
+
+  // Surface a clear banner when LOVs couldn't load — without this, dropdowns
+  // appear empty/broken and the customer has no way to know why.
+  if (_lovsLoadError && !LOVS) {
+    html += `<div class="note-box error" style="margin-bottom:18px">
+      <strong>Some form options couldn't be loaded</strong> ${_lovsRetrying ? '— retrying…' : '— please <a href="javascript:location.reload()" style="text-decoration:underline">refresh the page</a>.'}
+      Dropdowns may appear empty until this is resolved.
+    </div>`;
+  }
+
+  html += page.fn();
+
+  // Page 1 has its own "Verify & Continue" button inside the OTP block.
+  // Hide the global Next button here to avoid two buttons doing the same thing.
+  // For all other pages, show the standard Back / Next / Submit footer.
+  if (curPage !== 6 && curPage !== 1) {
+    const isFinalStep = curPage === 5;
+    html += `<div class="nav-bar">
+      <button class="btn btn-back" onclick="goBack()">← Back</button>
+      ${isFinalStep
+        ? `<button class="btn btn-submit" ${S._submitting?'disabled':''} onclick="goNext()">${S._submitting ? 'Submitting…' : 'Submit Application'}</button>`
+        : `<button class="btn btn-next" onclick="goNext()">Next →</button>`
+      }
+    </div>`;
+  } else if (curPage === 1 && !S._otpSent && !S._otpVerified) {
+    // Pre-OTP on Page 1: no Back (this is the first page), no Next yet.
+    // The "Send verification code" button is inside the OTP block.
+  } else if (curPage === 1 && S._otpVerified) {
+    // Already verified — let the user move on without re-verifying.
+    html += `<div class="nav-bar">
+      <button class="btn btn-back" disabled>← Back</button>
+      <button class="btn btn-next" onclick="goNext()">Next →</button>
+    </div>`;
+  }
+
+  if (S._validationMsg) {
+    html += `<div class="note-box error" style="margin-top:12px"><strong>Please fix the following:</strong> ${esc(S._validationMsg)}</div>`;
+  }
+
+  document.getElementById('main').innerHTML = html;
+
+  document.querySelectorAll('#main input, #main textarea, #main select').forEach(el => {
+    el.setAttribute('autocomplete', 'off');
+    el.setAttribute('autocorrect', 'off');
+    el.setAttribute('autocapitalize', 'off');
+    if (!el.name || ['text','email','tel','number'].includes(el.type)) {
+      el.setAttribute('name', 'kyb_' + Math.random().toString(36).substr(2, 8));
+    }
+  });
+
+  // Page 1 OTP button: enabled state depends on the four contact fields,
+  // which update S on `oninput` without triggering a re-render (re-rendering
+  // on every keystroke would steal focus from the field being typed in).
+  // So we attach a separate live updater here that toggles the button only.
+  if (curPage === 1 && !S._otpSent) {
+    document.querySelectorAll('#main input').forEach(el => {
+      el.addEventListener('input', updateOtpSendButtonState);
+    });
+    updateOtpSendButtonState();
+  }
+
+  if (preserveScroll || curPage === _lastPage) {
+    window.scrollTo({ top: scrollY, behavior: 'instant' });
+  } else {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }
+  _lastPage = curPage;
+
+  document.getElementById('rail').classList.remove('open');
+  document.getElementById('railOverlay').classList.remove('open');
+}
+
+function isPageStarted(id) {
+  switch (id) {
+    case 1: return !!(S.businessName || S.applicantName || S.email || S.mobile);
+    case 2: return !!(S.tlDoc || S.structureType);
+    case 3: return S.shareholders.some(s => s.name) || S.signatories.some(s => s.mode) || !!S.externalSignatory.name;
+    case 4: return !!(S.vatCertDoc || S.moaDoc || S.aoaDoc);
+    case 5: return !!(S.fatcaUSPerson || S.consentGiven);
+    case 6: return false;
+    default: return false;
+  }
+}
+
+function goTo(n) {
+  if (n > maxReachedPage) return;
+  S._validationMsg = ''; S._submitError = '';
+  const fromPg = curPage;
+  curPage = n;
+  if (fromPg !== n) {
+    sessionPage(fromPg, n);
+    scheduleDraftSave(PAGE_IDS[n]);
+  }
+  // Close the mobile rail if it's open (user just clicked a nav item)
+  const rail = document.getElementById('rail');
+  if (rail && rail.classList.contains('open')) {
+    rail.classList.remove('open');
+    const overlay = document.getElementById('railOverlay');
+    if (overlay) overlay.classList.remove('open');
+  }
+  render();
+}
+
+async function goNext() {
+  // Page 1 advance is owned by the OTP flow — block the generic path
+  // unless OTP is already verified (e.g. user came back from Page 2).
+  if (curPage === 1 && !S._otpVerified) {
+    S._validationMsg = 'Please verify your email and mobile to continue.';
+    render(true);
+    return;
+  }
+
+  const err = validatePage(curPage);
+  if (err) {
+    S._validationMsg = err;
+    render(true);
+    setTimeout(() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }), 50);
+    return;
+  }
+  S._validationMsg = '';
+
+  if (curPage === 5) {
+    const ok = await submitApplication();
+    if (!ok) return;
+  }
+
+  if (curPage < totalPages) {
+    const fromPg = curPage;
+    curPage++;
+    if (curPage > maxReachedPage) maxReachedPage = curPage;
+    sessionPage(fromPg, curPage);
+    scheduleDraftSave(PAGE_IDS[curPage]);
+    render();
+  }
+}
+
+function goBack() {
+  S._validationMsg = ''; S._submitError = '';
+  if (curPage > 1) {
+    const fromPg = curPage;
+    curPage--;
+    sessionPage(fromPg, curPage);
+    scheduleDraftSave(PAGE_IDS[curPage]);
+    render();
+  }
+}
+
+/* ============================================================
+   VALIDATION
+   ============================================================ */
+function validatePage(pg) {
+  const sole = isSoleOwnerFlow();
+  const multi = isMultiFlow();
+  const shCount = effectiveShareholderCount();
+  const sigCount = effectiveSignatoryCount();
+
+  switch (pg) {
+    case 1:
+      if (!S.businessName.trim()) return 'Business name is required.';
+      if (!S.applicantName.trim()) return 'Your full name is required.';
+      if (!S.email.trim()) return 'Email address is required.';
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(S.email.trim())) return 'Please enter a valid email address.';
+      if (!S.mobile.trim()) return 'Mobile number is required.';
+      if (!isValidUaeMobile(S.mobile)) return 'Please enter a 9-digit UAE mobile number starting with 5 (e.g. 501234567).';
+      return null;
+
+    case 2: {
+      if (!S.tlDoc) return 'Please upload your Trade License.';
+      // Block if any TL extracted fields haven't been reviewed
+      const tlPending = anyUnreviewedFields().filter(p => p.startsWith('tl.'));
+      if (tlPending.length > 0) {
+        console.warn('[Validate] Unreviewed TL fields:', tlPending);
+        // Auto-confirm any pending fields that don't have visible UI on this page
+        // (defensive — should never happen with the markExtracted gating, but a
+        // safety net so customers don't get stuck).
+        const reviewable = ['tl.companyNameEn','tl.licenseNumber','tl.tradeName','tl.issueDate','tl.expiryDate','tl.activitiesText','tl.emirate','tl.legalType'];
+        const trulyStuck = tlPending.filter(p => !reviewable.includes(p));
+        trulyStuck.forEach(p => { console.warn('[Validate] Auto-confirming invisible field:', p); confirmField(p); });
+        const stillPending = tlPending.filter(p => reviewable.includes(p));
+        if (stillPending.length > 0) {
+          const fieldNames = stillPending.map(p => p.replace('tl.','').replace(/([A-Z])/g, ' $1').toLowerCase().trim()).join(', ');
+          return `Please review the ${stillPending.length} extracted Trade License field${stillPending.length>1?'s':''} above (${fieldNames}). Tap "Looks correct" or edit if needed.`;
+        }
+      }
+      // Required TL fields after extraction
+      if (!S.tl.companyNameEn.trim()) return 'Company Name (English) is required.';
+      if (!S.tl.licenseNumber.trim()) return 'Trade License Number is required.';
+      if (!S.tl.expiryDate) return 'Trade License Expiry Date is required.';
+      if (isExpiredDate(S.tl.expiryDate)) return 'Your Trade License has expired. Please renew it before continuing — we cannot open an account against an expired Trade License.';
+      if (!S.tl.legalType) return 'Please confirm the Legal Type from the dropdown.';
+      if (!S.structureType) return 'Please tell us about your business structure.';
+      if (sole && !S.ownerIsSignatory) return 'Please indicate whether you are the authorised signatory.';
+      if (multi) {
+        if (!S.shareholderCount) return 'Please tell us how many shareholders you have.';
+        if (!S.hasEntityShareholders) return 'Please tell us whether any shareholders are companies.';
+      }
+      if (!S.hasEmployees) return 'Please tell us whether any employees are on your MOHRE establishment card.';
+      return null;
+    }
+
+    case 3: {
+      const A = S.authoriser;
+      const C = S.corporate;
+
+      // Both modes: must answer the applicant-is-authoriser question
+      if (!S.applicantIsAuthoriser) return 'Please indicate whether you are the authoriser for this business.';
+
+      // Sole-owner: applicant=owner check
+      if (sole && !S.applicantIsOwner) return 'Please indicate whether you are the owner of this business.';
+
+      if (sole && S.applicantIsOwner) {
+        // Block if any authoriser extracted fields haven't been reviewed.
+        // Auto-confirm any extracted fields that don't have visible UI on this page
+        // so customers don't get stuck on invisible fields.
+        const authPending = anyUnreviewedFields().filter(p => p.startsWith('authoriser.'));
+        if (authPending.length > 0) {
+          console.warn('[Validate] Unreviewed authoriser fields:', authPending);
+          const reviewable = [
+            'authoriser.firstName','authoriser.middleName','authoriser.lastName',
+            'authoriser.fatherName','authoriser.nameArabic',
+            'authoriser.dob','authoriser.gender',
+            'authoriser.nationality','authoriser.countryOfBirth',
+            'authoriser.placeOfBirth','authoriser.countryOfResidence',
+            'authoriser.salutation','authoriser.maritalStatus',
+            'authoriser.eidNumber','authoriser.eidExpiryDate',
+            'authoriser.passportNumber','authoriser.passportExpiryDate',
+            'authoriser.passportIssuanceCountry','authoriser.passportIssuanceDate',
+          ];
+          const trulyStuck = authPending.filter(p => !reviewable.includes(p));
+          trulyStuck.forEach(p => { console.warn('[Validate] Auto-confirming invisible field:', p); confirmField(p); });
+          const stillPending = authPending.filter(p => reviewable.includes(p));
+          if (stillPending.length > 0) {
+            const fieldNames = stillPending.map(p => p.replace('authoriser.','').replace(/([A-Z])/g, ' $1').toLowerCase().trim()).join(', ');
+            return `Please review the ${stillPending.length} extracted identity field${stillPending.length>1?'s':''} above (${fieldNames}). Tap "Looks correct" or edit if needed.`;
+          }
+        }
+
+        // Required authoriser fields
+        if (!A.firstName.trim()) return 'First name is required.';
+        if (!A.lastName.trim())  return 'Last name is required.';
+        if (!A.dob)              return 'Date of birth is required.';
+        if (!A.gender)           return 'Gender is required.';
+        if (!A.nationality)      return 'Nationality is required.';
+        if (!A.countryOfResidence) return 'Country of residence is required.';
+
+        // Address
+        if (!A.street.trim()) return 'Street / neighborhood is required.';
+        if (!A.area.trim())   return 'Area / region is required.';
+        if (!A.city.trim())   return 'City is required.';
+        if (!A.emirate)       return 'Emirate is required.';
+
+        // Tax
+        if (!A.taxYN) return 'Please answer the tax question.';
+
+        // Profession
+        if (!A.occupation)  return 'Occupation is required.';
+        if (!A.jobTitle.trim()) return 'Job title is required.';
+        if (!A.economicSector) return 'Economic sector is required.';
+        if (!Array.isArray(A.sourceOfIncome) || A.sourceOfIncome.length === 0)
+          return 'Please select at least one Source of Income.';
+        if (A.sourceOfIncome.includes('other') && !A.sourceOfIncomeOther.trim())
+          return 'Please specify your Source of Income (Other).';
+
+        // PEP
+        if (!A.isPep) return 'Please answer the PEP question.';
+        if (A.isPep !== 'no') {
+          if (!A.pepPositionCountry.trim()) return 'PEP — please describe the position and country.';
+          if (!A.pepSourceOfWealthNarrative.trim()) return 'PEP — please describe the source of wealth.';
+        }
+
+        // Wealth
+        if (!Array.isArray(A.sourceOfWealth) || A.sourceOfWealth.length === 0)
+          return 'Please select at least one Source of Wealth.';
+        if (A.sourceOfWealth.includes('other') && !A.sourceOfWealthOther.trim())
+          return 'Please specify your Source of Wealth (Other).';
+
+        // Sanctions
+        if (!A.sanctions) return 'Please answer the sanctions / regulatory question.';
+        if (A.sanctions === 'yes' && !A.sanctionsDescription.trim())
+          return 'Please briefly describe the sanctions / regulatory issue.';
+
+        // Account profile
+        if (!C.estimatedMonthlyTurnover) return 'Estimated Monthly Turnover is required.';
+        if (!Array.isArray(C.purposeOfAccount) || C.purposeOfAccount.length === 0)
+          return 'Please select at least one Purpose of Account.';
+
+        // ID upload check (sole owner)
+        if (!A.eidFrontDoc && !A.passportDoc)
+          return 'Please upload either your Emirates ID (front) or your Passport.';
+
+        // ID expiry checks — block if either document is past its expiry date.
+        // (Only check if a value was captured/entered; missing dates are caught
+        // by their own required-field rules above.)
+        if (A.eidExpiryDate && isExpiredDate(A.eidExpiryDate))
+          return 'Your Emirates ID has expired. Please renew it before continuing.';
+        if (A.passportExpiryDate && isExpiredDate(A.passportExpiryDate))
+          return 'Your Passport has expired. Please renew it before continuing.';
+      }
+
+      // External signatory (sole owner with different signatory)
+      if (sole && S.ownerIsSignatory === 'no') {
+        const ext = S.externalSignatory;
+        if (!ext.name.trim()) return 'Authorised signatory: full name is required.';
+        if (!ext.nationality)  return 'Authorised signatory: nationality is required.';
+        const ed = S.externalSignatoryIdDoc;
+        const who = ext.name || 'the authorised signatory';
+        if (ext.isUaeResident === 'yes') {
+          if (!ed.eidFront) return `Please upload the front of ${who}'s Emirates ID.`;
+          if (!ed.eidBack)  return `Please upload the back of ${who}'s Emirates ID.`;
+        } else {
+          if (!ed.passport) return `Please upload ${who}'s passport.`;
+        }
+        if (!S.poaDoc) return 'Please upload the Power of Attorney for the authorised signatory.';
+        if (!ext.isPep) return 'Please answer the PEP question for the authorised signatory.';
+      }
+
+      // Multi-flow shareholders + signatories
+      if (multi) {
+        // Block if authoriser EID extraction unreviewed (multi flow only shows
+        // a slim subset of authoriser fields).
+        const authPending = anyUnreviewedFields().filter(p => p.startsWith('authoriser.'));
+        if (authPending.length > 0) {
+          console.warn('[Validate] Unreviewed authoriser fields (multi):', authPending);
+          // In the multi-flow About-You section, only firstName/lastName/nationality/dob
+          // are surfaced. Auto-confirm anything else extracted from EID/passport.
+          const reviewable = ['authoriser.firstName','authoriser.lastName','authoriser.nationality','authoriser.dob'];
+          authPending.forEach(p => { if (!reviewable.includes(p)) confirmField(p); });
+          const stillPending = authPending.filter(p => reviewable.includes(p));
+          if (stillPending.length > 0) {
+            const fieldNames = stillPending.map(p => p.replace('authoriser.','').replace(/([A-Z])/g, ' $1').toLowerCase().trim()).join(', ');
+            return `Please review the ${stillPending.length} extracted identity field${stillPending.length>1?'s':''} above (${fieldNames}).`;
+          }
+        }
+        if (!A.firstName.trim()) return 'Your first name is required.';
+        if (!A.lastName.trim())  return 'Your last name is required.';
+        if (!A.nationality)      return 'Your nationality is required.';
+        if (!A.dob)              return 'Your date of birth is required.';
+        if (!A.isPep)            return 'Please answer the PEP question.';
+        // ID expiry checks for the applicant
+        if (A.eidExpiryDate && isExpiredDate(A.eidExpiryDate))
+          return 'Your Emirates ID has expired. Please renew it before continuing.';
+        if (A.passportExpiryDate && isExpiredDate(A.passportExpiryDate))
+          return 'Your Passport has expired. Please renew it before continuing.';
+
+        // Shareholder details
+        for (let i = 0; i < shCount; i++) {
+          const sh = S.shareholders[i];
+          if (!sh.name.trim()) return `Shareholder ${i+1}: name is required.`;
+          if (!sh.pct) return `Shareholder ${i+1}: shareholding % is required.`;
+          if (sh.isEntity !== 'yes') {
+            if (!sh.nationality) return `Shareholder ${i+1}: nationality is required.`;
+            if (!sh.isUaeResident) return `Shareholder ${i+1}: please indicate UAE residency status.`;
+          }
+        }
+        // Shareholder ID documents
+        for (let i = 0; i < shCount; i++) {
+          const sh = S.shareholders[i];
+          if (!sh.name) continue;
+          if (sh.isEntity === 'yes') {
+            if (!S.entityShTLs[i]) return `Please upload the Trade License for ${sh.name}.`;
+          } else {
+            const idDocs = S.shIdDocs[i];
+            if (sh.isUaeResident === 'yes') {
+              if (!idDocs.eidFront) return `Please upload the front of ${sh.name}'s Emirates ID.`;
+              if (!idDocs.eidBack)  return `Please upload the back of ${sh.name}'s Emirates ID.`;
+            } else {
+              if (!idDocs.passport) return `Please upload ${sh.name}'s passport.`;
+            }
+          }
+        }
+        // Signatories
+        for (let i = 0; i < sigCount; i++) {
+          const sig = S.signatories[i];
+          if (!sig.mode) return `Signatory ${i+1}: please indicate whether they are a shareholder or a different person.`;
+          if (sig.mode === 'linked' && sig.linkedShIdx === '') return `Signatory ${i+1}: please select which shareholder.`;
+          if (sig.mode === 'new') {
+            if (!sig.name.trim()) return `Signatory ${i+1}: full name is required.`;
+            if (!sig.nationality) return `Signatory ${i+1}: nationality is required.`;
+            const idDocs = S.sigIdDocs[i];
+            if (sig.isUaeResident === 'yes') {
+              if (!idDocs.eidFront) return `Please upload the front of ${sig.name}'s Emirates ID.`;
+              if (!idDocs.eidBack)  return `Please upload the back of ${sig.name}'s Emirates ID.`;
+            } else {
+              if (!idDocs.passport) return `Please upload ${sig.name}'s passport.`;
+            }
+          }
+        }
+        if (anySignatoryIsNew() && !S.poaDoc) return 'Please upload the Power of Attorney for non-shareholder signatories.';
+        if (!S.uboConfirmed) return 'Please acknowledge the UBO information requirement to proceed.';
+        // Account profile
+        if (!C.estimatedMonthlyTurnover) return 'Estimated Monthly Turnover is required.';
+        if (!Array.isArray(C.purposeOfAccount) || C.purposeOfAccount.length === 0)
+          return 'Please select at least one Purpose of Account.';
+        if (!Array.isArray(C.sourceOfFunds) || C.sourceOfFunds.length === 0)
+          return 'Please select at least one Source of Funds.';
+      }
+      return null;
+    }
+
+    case 4: {
+      if (!S.vatCertDoc) return 'Please upload your VAT certificate (or non-registration confirmation).';
+      if (!S.tenancyContractDoc) return 'Please upload your Tenancy Contract.';
+      // Corporate docs (multi only)
+      if (multi) {
+        if (!S.moaDoc) return 'Please upload the Memorandum of Association.';
+        if (!S.aoaDoc) return 'Please upload the Articles of Association.';
+        if (!S.shareCertDoc) return 'Please upload the Share Certificate.';
+        if (!S.boardResolutionDoc) return 'Please upload the Board Resolution.';
+      }
+      if (S.hasEmployees === 'yes' && !S.mohreDoc) return 'Please upload the MOHRE Employee List.';
+      return null;
+    }
+
+    case 5:
+      if (!S.fatcaUSPerson)    return 'Please answer the FATCA U.S. Person question.';
+      if (!S.consentGiven)     return 'Please read and accept the consent statement to submit your application.';
+      return null;
+
+    default:
+      return null;
+  }
+}
+
+/* ============================================================
+   SUBMISSION
+   ============================================================ */
+async function submitApplication() {
+  S._submitting = true; S._submitError = '';
+  render(true);
+
+  // Wait briefly for any uploads still in flight. If anything still hasn't
+  // finished after 10s we let submit proceed anyway — the applicant can
+  // retry by re-uploading the offending file. (We don't block forever
+  // because a stuck upload would mean the user is locked out of submitting.)
+  const allUploaded = await awaitPendingUploads(10000);
+  if (!allUploaded) {
+    console.warn('[submit] Some uploads still pending; submitting anyway.');
+  }
+
+  try {
+    const payload = JSON.parse(JSON.stringify(S, (k, v) => {
+      if (k === 'data' || k === 'thumb') return undefined;
+      if (k.startsWith('_')) return undefined;
+      return v;
+    }));
+    payload._flow = 'fast_track_v5';
+    payload._submittedAt = new Date().toISOString();
+    payload.session_id = SESSION_ID;
+    // Convert Page-1 mobile from local 9-digit to LSQ wire format.
+    // Authoriser/corporate mobiles are free-form (may be international).
+    if (S.mobile && isValidUaeMobile(S.mobile)) {
+      payload.mobile = fullMobileForWire(S.mobile);
+    }
+
+    const resp = await fetch('/api/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const bodyText = await resp.text();
+    let data = null;
+    try { data = bodyText ? JSON.parse(bodyText) : null; } catch (_) {}
+    if (!resp.ok) {
+      const msg = (data && data.detail) ? data.detail : `Server error (${resp.status})`;
+      console.error('[/api/submit] failed:', resp.status, bodyText);
+      if (data && data.traceback) console.error('traceback:', data.traceback.join('\n'));
+      throw new Error(msg);
+    }
+    _refNum = data.ref;
+    S._submitting = false;
+    return true;
+  } catch (e) {
+    if (e.message === 'Failed to fetch' || e.name === 'TypeError') {
+      console.log('[Submit] Server unreachable — generating local reference number.');
+      _refNum = 'KYB-2026-LOCAL-' + Math.random().toString(36).substr(2, 5).toUpperCase();
+      S._submitting = false;
+      return true;
+    }
+    S._submitError = e.message || 'Unknown error';
+    S._submitting = false;
+    render(true);
+    return false;
+  }
+}
+
+/* ============================================================
+   START OVER
+   ============================================================ */
+function startOver() {
+  if (!confirm('This will clear all entered data and start a new application. Continue?')) return;
+  startOverInternal();
+  // Rotate the session_id so analytics treats this as a fresh funnel.
+  try { localStorage.removeItem('kyb_session_id'); } catch (e) {}
+  SESSION_ID = null;
+  ensureSessionId();
+  sessionStart();
+  render();
+}
+
+/* Reset every field in S to defaults. Used by both the user-facing
+   startOver() and the resume "Start over" button (resetSession()).
+   Does NOT touch the session_id — callers handle it differently. */
+function startOverInternal() {
+  // Reset top-level scalars and arrays
+  Object.keys(S).forEach(k => {
+    if (typeof S[k] === 'string') S[k] = '';
+    else if (typeof S[k] === 'boolean') S[k] = false;
+    else if (Array.isArray(S[k])) {
+      if (k === 'entityShTLs') S[k] = [null,null,null,null];
+      else S[k].forEach(obj => {
+        if (typeof obj === 'object' && obj !== null) {
+          Object.keys(obj).forEach(ok => {
+            if (typeof obj[ok] === 'string') obj[ok] = '';
+            else if (typeof obj[ok] === 'boolean') obj[ok] = false;
+            else if (Array.isArray(obj[ok])) obj[ok].length = 0;
+            else obj[ok] = null;
+          });
+        }
+      });
+    }
+    else if (S[k] === null || typeof S[k] === 'object') {
+      if (k === 'externalSignatory') S[k] = { name: '', nationality: '', isUaeResident: 'yes', email: '', mobile: '', dob: '', isPep: '' };
+      else if (k === 'externalSignatoryIdDoc') S[k] = { eidFront: null, eidBack: null, passport: null };
+      else if (k === '_fieldStatus') S[k] = {};
+      else if (k === 'tl') S[k] = { legalType:'', legalTypeRaw:'', licenseNumber:'', companyNameEn:'', companyNameAr:'', tradeName:'', issueDate:'', expiryDate:'', registerNumber:'', issuingAuthority:'', issuingAuthorityCode:'', activitiesText:'', emirate:'' };
+      else if (k === 'authoriser') {
+        // Re-initialise authoriser to defaults
+        S.authoriser = {
+          firstName:'', middleName:'', lastName:'', nameArabic:'', fatherName:'',
+          dob:'', gender:'', salutation:'',
+          nationality:'', citizenship:'', countryOfBirth:'', placeOfBirth:'',
+          countryOfResidence:'AE',
+          maritalStatus:'', numberOfDependents:'', preferredLanguage:'english',
+          idType:'', eidNumber:'', eidIssuanceDate:'', eidExpiryDate:'',
+          residenceVisaExpiry:'', passportNumber:'', passportIssuanceDate:'',
+          passportIssuanceCountry:'', passportExpiryDate:'',
+          eidFrontDoc:null, eidBackDoc:null, passportDoc:null,
+          addressType:'residential', buildingName:'', street:'', area:'',
+          city:'', emirate:'', poBox:'', addressCountry:'AE',
+          residenceType:'', officePhone:'',
+          taxYN:'', taxNumber:'',
+          occupation:'business_owner', jobTitle:'', activityStatus:'self_employed',
+          economicSector:'', sourceOfIncome:[], sourceOfIncomeOther:'',
+          incomeCurrency:'AED', monthlySalary:'',
+          isPep:'', pepPositionCountry:'', pepSourceOfWealthNarrative:'',
+          sourceOfWealth:[], sourceOfWealthOther:'',
+          sanctions:'', sanctionsDescription:'',
+          isBeneficialOwner:''
+        };
+      }
+      else if (k === 'corporate') {
+        S.corporate = {
+          sourceOfFunds:[], sourceOfFundsOther:'',
+          purposeOfAccount:[], purposeOfAccountOther:'',
+          taxIndicator:'', vatTrn:'',
+          addressType:'business', buildingName:'', street:'', area:'',
+          city:'', emirate:'', poBox:'', addressCountry:'AE',
+          sameAsAuthoriser:'no',
+          email:'', mobile:'', officePhone:'',
+          sameContactAsAuthoriser:'yes', website:'',
+          estimatedMonthlyTurnover:'', annualExpectedTurnover:'',
+          numberOfEmployees:'0',
+          tenancyExpiryDate:''
+        };
+      }
+      else S[k] = null;
+    }
+  });
+  S.signatoryCount = '1';
+  S.shareholders.forEach(sh => { sh.isUaeResident = 'yes'; sh.isEntity = 'no'; });
+  S.signatories.forEach(sg => { sg.isUaeResident = 'yes'; });
+  S.externalSignatory = { name: '', nationality: '', isUaeResident: 'yes', email: '', mobile: '', dob: '', isPep: '' };
+  S.externalSignatoryIdDoc = { eidFront: null, eidBack: null, passport: null };
+  S._fieldStatus = {};
+  _refNum = null;
+
+  // Reset OTP state
+  S._otpSent = false;
+  S._otpVerified = false;
+  S._otpCodeSms = '';
+  S._otpError = '';
+  S._otpResendCooldown = 0;
+  S._refNumber = null;
+  if (window._otpCountdownTimer) {
+    clearInterval(window._otpCountdownTimer);
+    window._otpCountdownTimer = null;
+  }
+
+  _maxPageIdReached = 'business_contact';
+  curPage = 1;
+  maxReachedPage = 1;
+}
+
+function toggleRail() {
+  document.getElementById('rail').classList.toggle('open');
+  document.getElementById('railOverlay').classList.toggle('open');
+}
+
+/* Update the mobile bar's step indicator and progress bar.
+   Called from render() on every page transition. Cheap DOM manipulation,
+   no re-render. */
+function updateMobileBar() {
+  const stepLabel = document.getElementById('mobStepLabel');
+  const stepTitle = document.getElementById('mobStepTitle');
+  const progressBar = document.getElementById('mobProgressBar');
+  if (!stepLabel || !stepTitle || !progressBar) return;
+
+  // pages is the array of {id, title, fn} defined in render code.
+  // Total visible pages (excluding the hidden confirmation if needed).
+  const totalSteps = pages.length - 1;   // confirmation page isn't a "step"
+  const currentStep = Math.min(curPage, totalSteps);
+  const currentPage = pages.find(p => p.id === curPage);
+  const title = currentPage ? currentPage.title : '';
+
+  if (curPage >= pages.length) {
+    // Confirmation page — special case
+    stepLabel.textContent = 'Complete';
+    stepTitle.textContent = 'Application submitted';
+    progressBar.style.width = '100%';
+  } else {
+    stepLabel.textContent = `Step ${currentStep} of ${totalSteps}`;
+    stepTitle.textContent = title;
+    progressBar.style.width = `${(currentStep / totalSteps) * 100}%`;
+  }
+}
+
+// Bootstrap: register session, load LOVs, check for a resumable draft,
+// then render. All independent — render() runs regardless so a backend
+// hiccup doesn't block the user.
+ensureSessionId();
+sessionStart();
+
+// Resume check happens in parallel with LOV load. If there's a draft,
+// _resumePrompt will be set and the banner will appear on Page 1.
+checkForResumableDraft().catch(e => console.warn('[resume] check failed', e));
+
+loadLovs().finally(() => render());
+</script>
+</body>
+</html>
